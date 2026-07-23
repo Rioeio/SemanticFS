@@ -1,0 +1,91 @@
+# SemanticFS Configuration
+
+# Directories to watch for user files
+watch_directories:
+  - "C:\\Users\\Manoj\\OneDrive\\Documents"
+  - "C:\\Users\\Manoj\\Desktop"
+  - "C:\\Users\\Manoj\\Downloads"
+  - "C:\\Dev"
+
+# File types to index (glob patterns)
+include_patterns:
+  - "*.py"
+  - "*.js"
+  - "*.ts"
+  - "*.tsx"
+  - "*.jsx"
+  - "*.html"
+  - "*.css"
+  - "*.c"
+  - "*.cpp"
+  - "*.h"
+  - "*.java"
+  - "*.rs"
+  - "*.go"
+  - "*.md"
+  - "*.txt"
+  - "*.json"
+  - "*.yaml"
+  - "*.yml"
+  - "*.toml"
+  - "*.xml"
+  - "*.csv"
+  - "*.pdf"
+  - "*.docx"
+  - "*.tex"
+  - "*.sh"
+  - "*.bat"
+  - "*.ps1"
+  - "*.sql"
+  - "*.r"
+  - "*.R"
+  - "*.ipynb"
+
+# Exclude hidden system folders (.*), caches, extensions, and build artifacts
+exclude_patterns:
+  - "**/.*/**"
+  - "**/AppData/**"
+  - "**/node_modules/**"
+  - "**/__pycache__/**"
+  - "**/venv/**"
+  - "**/.venv/**"
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.semanticfs/**"
+  - "**/target/**"
+
+# Local AI Embedding model configuration
+embedding:
+  model_name: "all-MiniLM-L6-v2"
+  max_tokens: 512
+  batch_size: 32
+
+# ChromaDB vector store
+storage:
+  db_path: "~/.semanticfs/chromadb"
+  links_db_path: "~/.semanticfs/links.db"
+  collection_name: "file_embeddings"
+
+# Ambient Context Capture
+context:
+  enabled: true
+  capture_active_window: true
+  capture_processes: true
+  capture_time: true
+  capture_weather: false
+
+# File watcher settings
+watcher:
+  debounce_ms: 500
+  initial_scan: true
+  max_file_size_mb: 10
+
+# Server settings
+server:
+  host: "127.0.0.1"
+  port: 7777
+
+# Implicit Linker settings
+linker:
+  co_access_window_seconds: 300
+  min_link_weight: 2
