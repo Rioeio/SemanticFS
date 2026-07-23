@@ -1,6 +1,6 @@
-# 🧠 SemanticFS
+# SemanticFS
 
-> **A Temporal-Associative Terminal Tool & Local Neural Vector Engine for Context-Aware File Retrieval.**
+> **A Temporal-Associative Terminal Utility & Local Neural Vector Engine for Context-Aware File Retrieval.**
 
 ```text
    _____                           _   _      ______  _____ 
@@ -13,75 +13,75 @@
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Vectors](https://img.shields.io/badge/embeddings-384D%20Neural-purple)
-![Offline](https://img.shields.io/badge/privacy-100%25%20Local-green)
+![Embeddings](https://img.shields.io/badge/embeddings-384D%20Neural-purple)
+![Privacy](https://img.shields.io/badge/privacy-100%25%20Local-green)
 
 ---
 
-## 🌟 Overview
+## System Overview
 
-**SemanticFS** bridges the cognitive friction between human mental models and deterministic storage. Instead of forcing users to remember exact file paths (`C:/Users/Documents/v1/final.py`), SemanticFS allows you to search files based on **what you were doing, content concepts, and ambient activity context**.
-
----
-
-## ✨ Features
-
-- 🧠 **100% Local Neural Vector Search**: Powered by `SentenceTransformers` (`all-MiniLM-L6-v2`) & `ChromaDB`.
-- 🎓 **Local Model Fine-Tuning (`sfind train`)**: Fine-tune AI model weights directly on your local files for personalized domain accuracy.
-- ⚡ **Hybrid Keyword & Vector Scoring**: Combines dense vector embeddings with exact/partial token reranking for sub-millisecond precision.
-- 🎮 **On-Demand Service Control**: Zero 24/7 battery/CPU drain. Start and stop background ambient tracking on demand with `sfind start` and `sfind stop`.
-- ⌨️ **Terminal-Native Selection**: Interactive Rich terminal menu with arrow-key navigation, quick-number keys (`1`-`5`), and VS Code integration (`c`).
-- 📁 **Universal File Format Support**: Extracts text and metadata from Code, Markdown, TXT, PDF, DOCX, XLSX, PPTX, JSON, CSV, and media/binary files.
-- 🔒 **100% Private & Offline**: No cloud APIs, no data transmission, no subscription keys required.
+**SemanticFS** eliminates the cognitive friction of hierarchical file system retrieval. Instead of requiring exact folder paths (e.g., `C:/Users/Documents/v1/final.py`), SemanticFS allows users to retrieve files based on ambient context, semantic content concepts, and activity history.
 
 ---
 
-## 🚀 Quick Start
+## Core Features
 
-### 1. Installation
+- **Local Neural Vector Search**: Powered by `SentenceTransformers` (`all-MiniLM-L6-v2`) and embedded `ChromaDB`.
+- **Local Model Fine-Tuning (`sfind train`)**: Fine-tune transformer embeddings directly on local codebase vocabulary and files for specialized accuracy.
+- **Hybrid Keyword & Vector Scoring**: Combines dense vector similarity with token match reranking for sub-millisecond precision.
+- **On-Demand Service Control**: Zero persistent CPU or battery overhead. Start and stop background event tracking on demand via `sfind start` and `sfind stop`.
+- **Terminal Interface**: Interactive CLI menu with arrow-key navigation, quick-pick keys (`1`-`5`), and VS Code integration (`--code`).
+- **Universal Format Extraction**: Parses code files, Markdown, TXT, PDF, DOCX, XLSX, PPTX, JSON, CSV, and metadata for media binaries.
+- **Privacy & Offline Isolation**: Operates completely offline with zero telemetry or cloud dependencies.
+
+---
+
+## Quick Start
+
+### Installation
 
 Clone the repository and install in editable mode:
 
 ```bash
-git clone https://github.com/your-username/SemanticFS.git
+git clone https://github.com/Rioeio/SemanticFS.git
 cd SemanticFS
 pip install -e .
 ```
 
-### 2. Search your files
+### Usage Examples
 
 ```bash
-# Search using natural language context
+# Natural language context search
 sfind python linear algebra matrix solver
 
-# Search and automatically open in VS Code
+# Search and open top result directly in VS Code
 sfind medical research paper --code
 
-# View master system & vector analytics
+# Display system analytics and vector database stats
 sfind stats
 ```
 
 ---
 
-## 💻 Terminal Commands Summary (`sfind`)
+## Command Reference (`sfind`)
 
 | Command | Action |
 |---|---|
-| `sfind <query>` | Natural language context search + interactive arrow-key menu |
-| `sfind stats` | Show master analytics: indexed files, 384D vector count, DB disk size |
-| `sfind train` | Fine-tune local neural embedding model on your local files |
-| `sfind reindex` | Force full re-scan & vector re-indexing across all directories |
-| `sfind start` | Launch ambient background tracking process on demand |
-| `sfind stop` | Stop all background daemon processes |
-| `sfind status` | Check running/stopped status of background services |
-| `sfind recent` | Display 10 most recently modified files |
-| `sfind list-dirs` | Show all monitored workspace directories |
-| `sfind add-dir <path>` | Add a new folder path to monitored watch list |
+| `sfind <query>` | Context search with interactive terminal menu |
+| `sfind stats` | Display master analytics (file count, 384D vectors, DB size) |
+| `sfind train` | Fine-tune local neural embedding model on indexed files |
+| `sfind reindex` | Force full file re-scan and vector re-indexing |
+| `sfind start` | Launch ambient background tracking daemon on demand |
+| `sfind stop` | Stop ambient background tracking daemon |
+| `sfind status` | Check active status of background daemon |
+| `sfind recent` | List 10 most recently modified files |
+| `sfind list-dirs` | List all monitored workspace directories |
+| `sfind add-dir <path>` | Register a new directory for indexing |
 | `sfind --clear` | Reset vector collection |
 
 ---
 
-## 🛠️ Architecture
+## System Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
@@ -106,6 +106,6 @@ sfind stats
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
