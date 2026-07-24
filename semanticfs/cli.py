@@ -344,7 +344,7 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
     import socket
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(0.4)
+        sock.settimeout(2.5)
         sock.connect(("127.0.0.1", port))
         sock.sendall(json.dumps({"query": query}).encode("utf-8"))
         

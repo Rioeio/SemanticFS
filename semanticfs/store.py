@@ -67,11 +67,14 @@ class VectorStore:
         except Exception as e:
             logger.debug(f"delete error: {e}")
 
-    def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None) -> list[SearchResult]:
-        """Semantic search with dynamic chunk deduplication, stopword filtering, & hybrid keyword boosting."""
+    def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None, min_score_threshold: float = 0.28) -> list[SearchResult]:
+        """Semantic search with intent category routing, chunk deduplication, & strict relevance thresholding."""
+        from semanticfs.router import detect_query_intent
+        intent = detect_query_intent(query_text)
+        
         try:
             coll = self._get_collection()
-            fetch_limit = max(n_results * 5, 150)
+            fetch_limit = max(n_results * 8, 200)
             results = coll.query(
                 query_embeddings=[query_embedding],
                 n_results=fetch_limit,
@@ -94,18 +97,33 @@ class VectorStore:
                 if not filepath:
                     continue
 
-                score = max(0.0, 1.0 - distance)
+                raw_vector_score = max(0.0, 1.0 - distance)
+                score = raw_vector_score
+                
+                filetype = metadata.get("filetype", "").lower()
                 filename_lower = metadata.get("filename", "").lower()
                 filepath_lower = filepath.lower()
                 
+                # Category intent routing: boost matching filetypes, penalize mismatched categories
+                if intent.intent_category:
+                    if filetype in intent.target_exts:
+                        score += 0.50  # Massive boost for matching media category!
+                    else:
+                        score -= 0.35  # Penalty for non-matching filetypes (e.g. mp3 when asking for pictures!)
+
                 if query_words:
                     for word in query_words:
                         if word in filename_lower:
                             score += 0.45
                         elif word in filepath_lower:
-                            score += 0.25
+                            score += 0.20
 
-                score = min(1.0, score)
+                score = min(1.0, max(0.0, score))
+                
+                # Filter out low relevance garbage
+                if score < min_score_threshold:
+                    continue
+
                 start_line = int(metadata.get("start_line", 1))
                 end_line = int(metadata.get("end_line", 1))
                 
@@ -115,7 +133,7 @@ class VectorStore:
                     filepath=filepath,
                     score=score,
                     metadata=metadata,
-                    filetype=metadata.get("filetype", ""),
+                    filetype=filetype,
                     start_line=start_line,
                     end_line=end_line
                 )
