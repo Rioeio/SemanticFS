@@ -8,9 +8,11 @@ import time
 from pathlib import Path
 
 import click
-from rich.console import Console
+from rich.console import Console, Group
 from rich.live import Live
+from rich.panel import Panel
 from rich.prompt import IntPrompt
+from rich.syntax import Syntax
 from rich.table import Table
 
 from semanticfs.config import Config
@@ -110,8 +112,38 @@ def render_table(results, selected_index: int | None = None) -> Table:
             )
     return table
 
+def render_table_with_preview(results, selected_index: int) -> Group:
+    """Renders search results table + live syntax-highlighted code preview panel."""
+    table = render_table(results, selected_index)
+    if not results or selected_index >= len(results):
+        return Group(table)
+        
+    selected_res = results[selected_index]
+    filepath = Path(selected_res.filepath)
+    start_line = getattr(selected_res, "start_line", 1)
+    end_line = getattr(selected_res, "end_line", 1)
+    
+    if filepath.exists() and filepath.suffix.lower() in ('.py', '.js', '.ts', '.html', '.css', '.json', '.md', '.txt', '.yaml', '.sql', '.c', '.cpp', '.rs', '.go'):
+        try:
+            with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                lines = f.readlines()
+                start_l = max(0, start_line - 1)
+                end_l = min(len(lines), max(end_line + 5, start_l + 15))
+                snippet_lines = "".join(lines[start_l:end_l])
+                
+                lexer = filepath.suffix.lstrip('.') if filepath.suffix else 'text'
+                syntax = Syntax(snippet_lines, lexer, theme="monokai", line_numbers=True, start_line=start_l+1)
+                preview_panel = Panel(syntax, title=f"📄 Preview: {filepath.name} (Lines {start_l+1}-{end_l})", border_style="cyan")
+                return Group(table, preview_panel)
+        except Exception:
+            pass
+            
+    snippet = str(selected_res.metadata.get("content_snippet", "No preview available"))
+    preview_panel = Panel(snippet, title=f"📄 Match Snippet: {filepath.name}", border_style="cyan")
+    return Group(table, preview_panel)
+
 def interactive_select(results, query: str, open_with_code: bool = False) -> None:
-    """Interactive arrow-key menu powered by Rich Live display."""
+    """Interactive arrow-key menu with live code preview box."""
     if not results or not sys.stdin.isatty():
         return
 
@@ -123,7 +155,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
         
         console.print("\n[bold cyan]Use ↑/↓ Arrow Keys to select, [Enter] to open, [c] for VS Code, [1-5] quick pick, [q/Esc] to exit:[/bold cyan]\n")
         
-        with Live(render_table(results, selected_index), console=console, refresh_per_second=10) as live:
+        with Live(render_table_with_preview(results, selected_index), console=console, refresh_per_second=10) as live:
             while True:
                 key = msvcrt.getch()
                 if key in (b'\r', b'\n'):  # Enter
@@ -142,7 +174,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
                     idx = int(key.decode('ascii')) - 1
                     if 0 <= idx < total:
                         selected_index = idx
-                        live.update(render_table(results, selected_index))
+                        live.update(render_table_with_preview(results, selected_index))
                         live.stop()
                         open_path(results[selected_index].filepath, open_with_code)
                         return
@@ -152,7 +184,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
                         selected_index = (selected_index - 1) % total
                     elif arrow == b'P':  # Down
                         selected_index = (selected_index + 1) % total
-                    live.update(render_table(results, selected_index))
+                    live.update(render_table_with_preview(results, selected_index))
 
     else:
         console.print(render_table(results))
@@ -224,7 +256,7 @@ def show_status_and_analytics():
     table.add_column("Description", style="dim")
 
     table.add_row("Ambient Daemon Status", d_status, "Background filesystem event tracker")
-    table.add_row("Total Files Indexed", str(file_count), "Total user files indexed in semantic store")
+    table.add_row("Total Files/Chunks Indexed", str(file_count), "Total semantic chunks stored in vector store")
     table.add_row("Vector Embeddings Stored", str(vector_count), "384-dimensional dense neural vectors generated")
     table.add_row("Neural Vector Model", config.embedding.model_name, "Local transformer model (all-MiniLM-L6-v2)")
     table.add_row("Vector DB Disk Size", f"{db_size_mb} MB", "ChromaDB vector store storage footprint")
@@ -247,18 +279,89 @@ def run_reindex():
     daemon_ctx.initial_scan()
     
     count = store.count()
-    console.print(f"[bold green]✔ Re-indexing complete! {count} files vector-indexed.[/bold green]")
+    console.print(f"[bold green]✔ Re-indexing complete! {count} chunks vector-indexed.[/bold green]")
+
+def search_git_commits(query: str):
+    print_banner()
+    config = Config.get_instance()
+    console.print(f"[bold cyan]🔍 Searching Git commits for:[/bold cyan] '{query}'\n")
+    
+    found_any = False
+    for watch_dir in config.watcher.watch_directories:
+        git_dir = watch_dir / ".git"
+        if git_dir.exists():
+            try:
+                cmd = f"git log --grep=\"{query}\" -i --oneline -n 10"
+                res = subprocess.run(cmd, cwd=watch_dir, shell=True, capture_output=True, text=True)
+                if res.stdout.strip():
+                    found_any = True
+                    table = Table(title=f"Git Commits in {watch_dir.name}")
+                    table.add_column("Commit Hash", style="cyan")
+                    table.add_column("Commit Message", style="green")
+                    for line in res.stdout.strip().splitlines():
+                        parts = line.split(" ", 1)
+                        chash = parts[0]
+                        cmsg = parts[1] if len(parts) > 1 else ""
+                        table.add_row(chash, cmsg)
+                    console.print(table)
+            except Exception:
+                pass
+    if not found_any:
+        console.print("[yellow]No matching git commits found across monitored repositories.[/yellow]")
+
+def show_completion():
+    print_banner()
+    ps_code = """# SemanticFS PowerShell Autocomplete Profile Setup
+function sf { sfind $args }
+Register-ArgumentCompleter -Native -CommandName sfind -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $subcommands = @('start', 'stop', 'status', 'stats', 'train', 'reindex', 'recent', 'list-dirs', 'add-dir', 'commit', 'completion', '--clear', '--code', '--since')
+    $subcommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}
+"""
+    console.print(Panel(ps_code, title="PowerShell Completion Script", border_style="cyan"))
+    console.print("[dim]Copy the above snippet into your PowerShell $PROFILE for instant Tab-completion![/dim]")
+
+def parse_since(since_str: str) -> float:
+    now = time.time()
+    unit = since_str[-1].lower()
+    try:
+        val = int(since_str[:-1])
+        if unit == 'd':
+            return now - (val * 86400)
+        elif unit == 'h':
+            return now - (val * 3600)
+        elif unit == 'm':
+            return now - (val * 60)
+    except Exception:
+        pass
+    return 0.0
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("query_parts", nargs=-1)
 @click.option("--limit", "-l", default=5, help="Number of results")
 @click.option("--type", "-t", "filetype", help="Filter by file extension")
+@click.option("--since", "-s", help="Filter by modification time (e.g. 7d, 24h, 30m)")
+@click.option("--model", "-m", default="all-MiniLM-L6-v2", help="Embedding model name")
 @click.option("--open", "open_file", is_flag=True, help="Automatically open top result")
 @click.option("--code", "open_code", is_flag=True, help="Open top result in VS Code")
 @click.option("--stats", "show_stats", is_flag=True, help="Show index statistics")
 @click.option("--clear", "clear_index", is_flag=True, help="Clear current index collection")
 @click.option("--no-interactive", is_flag=True, help="Disable interactive selection menu")
-def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_file: bool, open_code: bool, show_stats: bool, clear_index: bool, no_interactive: bool):
+def main(
+    query_parts: tuple[str, ...],
+    limit: int,
+    filetype: str | None,
+    since: str | None,
+    model: str,
+    open_file: bool,
+    open_code: bool,
+    show_stats: bool,
+    clear_index: bool,
+    no_interactive: bool
+):
     """SemanticFS CLI — Search your files using natural language context."""
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
@@ -267,6 +370,8 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
         print_banner()
         console.print("[bold cyan]SemanticFS CLI — Terminal Commands[/bold cyan]\n")
         console.print("  [bold green]sfind <query>[/bold green]         - Search files by natural language context")
+        console.print("  [bold green]sfind commit <query>[/bold green]  - Search git commit messages")
+        console.print("  [bold green]sfind completion[/bold green]      - Generate PowerShell autocomplete script")
         console.print("  [bold green]sfind stats[/bold green]           - Master analytics: daemon status, vectors, DB size, file count")
         console.print("  [bold green]sfind train[/bold green]           - Fine-tune AI model on your local files")
         console.print("  [bold green]sfind reindex[/bold green]         - Force full re-scan & vector re-indexing")
@@ -280,7 +385,13 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
 
     lower_args = set(p.lower() for p in query_parts)
 
-    if "train" in lower_args:
+    if "completion" in lower_args:
+        show_completion()
+        return
+    elif "commit" in lower_args and len(query_parts) > 1:
+        search_git_commits(" ".join(query_parts[1:]))
+        return
+    elif "train" in lower_args:
         print_banner()
         from semanticfs.trainer import train_local_model
         train_local_model(epochs=1)
@@ -335,7 +446,7 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
 
     query = " ".join(query_parts)
     
-    embedder = Embedder(config.embedding.model_name, config.embedding.max_tokens)
+    embedder = Embedder(model, config.embedding.max_tokens)
     query_embedding = embedder.embed_text(query)
     
     filters = {}
@@ -344,6 +455,11 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
         
     results = store.search(query_embedding, query_text=query, n_results=limit, filters=filters if filters else None)
     
+    if since:
+        min_ts = parse_since(since)
+        if min_ts > 0:
+            results = [r for r in results if float(r.metadata.get("modified_at", 0)) >= min_ts]
+
     if not results:
         console.print(f"[yellow]No results found for:[/yellow] '{query}'")
         return
