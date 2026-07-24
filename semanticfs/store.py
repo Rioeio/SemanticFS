@@ -16,6 +16,8 @@ class SearchResult:
     score: float
     metadata: dict[str, Any]
     filetype: str
+    start_line: int = 1
+    end_line: int = 1
 
 class VectorStore:
     """Wraps ChromaDB for storing file embeddings and metadata with lazy client connection."""
@@ -38,7 +40,7 @@ class VectorStore:
         return hashlib.sha256(str(filepath.absolute()).encode("utf-8")).hexdigest()
 
     def upsert(self, file_id: str, embedding: list[float], metadata: dict[str, Any]) -> None:
-        """Add or update a file in the store."""
+        """Add or update a file or chunk in the store."""
         safe_metadata = {k: v for k, v in metadata.items() if isinstance(v, (str, int, float, bool))}
         try:
             coll = self._get_collection()
@@ -50,19 +52,20 @@ class VectorStore:
         except Exception as e:
             logger.debug(f"upsert error: {e}")
 
-    def delete(self, file_id: str) -> None:
-        """Remove a file from the store."""
+    def delete(self, parent_file_id: str) -> None:
+        """Remove a file and all its chunks from the store."""
         try:
             coll = self._get_collection()
-            coll.delete(ids=[file_id])
+            # Delete any chunks starting with parent_file_id
+            coll.delete(where={"filepath": parent_file_id})
         except Exception as e:
             logger.debug(f"delete error: {e}")
 
     def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None) -> list[SearchResult]:
-        """Semantic search with hybrid keyword boosting for filename & path matches."""
+        """Semantic search with dynamic chunk deduplication & hybrid keyword boosting."""
         try:
             coll = self._get_collection()
-            fetch_limit = max(n_results * 3, 50)
+            fetch_limit = max(n_results * 4, 100)
             results = coll.query(
                 query_embeddings=[query_embedding],
                 n_results=fetch_limit,
@@ -72,8 +75,8 @@ class VectorStore:
             logger.error(f"search error: {e}")
             return []
         
-        search_results = []
         query_words = [w.lower() for w in query_text.split() if len(w) > 1]
+        grouped_results: dict[str, SearchResult] = {}
 
         if results and results['ids'] and results['ids'][0]:
             for i in range(len(results['ids'][0])):
@@ -81,10 +84,13 @@ class VectorStore:
                 metadata = results['metadatas'][0][i] if results['metadatas'] else {}
                 distance = results['distances'][0][i] if results['distances'] else 0.0
                 
+                filepath = metadata.get("filepath", "")
+                if not filepath:
+                    continue
+
                 score = max(0.0, 1.0 - distance)
-                
                 filename_lower = metadata.get("filename", "").lower()
-                filepath_lower = metadata.get("filepath", "").lower()
+                filepath_lower = filepath.lower()
                 
                 if query_words:
                     for word in query_words:
@@ -94,16 +100,25 @@ class VectorStore:
                             score += 0.20
                 
                 score = min(1.0, score)
+                start_line = int(metadata.get("start_line", 1))
+                end_line = int(metadata.get("end_line", 1))
                 
-                search_results.append(SearchResult(
+                res = SearchResult(
                     id=file_id,
                     filename=metadata.get("filename", ""),
-                    filepath=metadata.get("filepath", ""),
+                    filepath=filepath,
                     score=score,
                     metadata=metadata,
-                    filetype=metadata.get("filetype", "")
-                ))
+                    filetype=metadata.get("filetype", ""),
+                    start_line=start_line,
+                    end_line=end_line
+                )
 
+                # Keep highest scoring chunk per file
+                if filepath not in grouped_results or res.score > grouped_results[filepath].score:
+                    grouped_results[filepath] = res
+
+        search_results = list(grouped_results.values())
         search_results.sort(key=lambda r: r.score, reverse=True)
         return search_results[:n_results]
 
@@ -152,7 +167,7 @@ class VectorStore:
             logger.error(f"clear error: {e}")
 
     def count(self) -> int:
-        """Count files in store using ultra-fast direct SQLite query if available."""
+        """Count vectors/chunks in store using fast direct SQLite query if available."""
         sqlite_file = self.db_path / "chroma.sqlite3"
         if sqlite_file.exists():
             try:

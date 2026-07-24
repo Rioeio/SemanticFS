@@ -40,40 +40,20 @@ class DaemonContext:
         self.watcher: FileWatcher | None = None
         self._running = True
 
-    def on_file_event(self, event_type: str, filepath: Path) -> None:
-        if event_type in ("created", "modified"):
-            # Skip hidden files or system paths
-            if any(part.startswith('.') or part in ('AppData', 'node_modules', '__pycache__', 'venv') for part in filepath.parts):
-                return
-
-            logger.info(f"Processing {event_type}: {filepath}")
-            try:
-                # 1. Capture context
-                context_text = ""
-                ctx_snapshot = None
-                if self.context_capture:
-                    ctx_snapshot = self.context_capture.capture()
-                    context_text = ctx_snapshot.to_text()
-
-                # 2. Generate embedding
-                content_embedding = self.embedder.embed_file(filepath)
-                
-                # 3. Read snippet safely
-                snippet = ""
-                try:
-                    if filepath.exists() and filepath.suffix.lower() in ('.txt', '.md', '.py', '.js', '.json', '.yaml'):
-                        with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
-                            snippet = f.read(200).replace('\n', ' ')
-                except Exception:
-                    pass
-
-                # 4. Upsert to VectorStore
-                file_id = VectorStore.generate_id(filepath)
-                
-                file_size = 0
-                if filepath.exists():
-                    file_size = filepath.stat().st_size
-                
+    def index_file(self, filepath: Path) -> None:
+        """Index a single file with dynamic semantic chunking."""
+        try:
+            chunks = self.embedder.extract_chunks(filepath)
+            ctx_snapshot = self.context_capture.capture() if self.context_capture else None
+            
+            file_size = filepath.stat().st_size if filepath.exists() else 0
+            
+            chunk_texts = [c.text for c in chunks]
+            embeddings = self.embedder.embed_batch(chunk_texts)
+            
+            parent_id = VectorStore.generate_id(filepath)
+            
+            for chunk, emb in zip(chunks, embeddings):
                 metadata = {
                     "filename": filepath.name,
                     "filepath": str(filepath.absolute()),
@@ -81,97 +61,91 @@ class DaemonContext:
                     "file_size": file_size,
                     "created_at": time.time(),
                     "modified_at": time.time(),
+                    "start_line": chunk.start_line,
+                    "end_line": chunk.end_line,
+                    "chunk_index": chunk.chunk_index,
+                    "total_chunks": len(chunks),
                     "context_window": ctx_snapshot.active_window if ctx_snapshot else "",
-                    "context_processes": ",".join(ctx_snapshot.running_processes) if ctx_snapshot else "",
-                    "context_time_bucket": ctx_snapshot.time_bucket if ctx_snapshot else "",
-                    "content_snippet": snippet
+                    "content_snippet": chunk.text[:300].replace('\n', ' ')
                 }
                 
-                self.store.upsert(file_id, content_embedding, metadata)
+                chunk_file_id = f"{parent_id}#chunk_{chunk.chunk_index}"
+                self.store.upsert(chunk_file_id, emb, metadata)
                 
-                # 5. Record access
-                self.linker.record_access(file_id)
-            except Exception as e:
-                logger.error(f"Failed to process {filepath}: {e}")
+            self.linker.record_access(parent_id)
+        except Exception as e:
+            logger.debug(f"Failed to index {filepath}: {e}")
+
+    def on_file_event(self, event_type: str, filepath: Path) -> None:
+        if event_type in ("created", "modified"):
+            if any(part.startswith('.') or part in ('AppData', 'node_modules', '__pycache__', 'venv') for part in filepath.parts):
+                return
+
+            logger.info(f"Processing {event_type}: {filepath}")
+            self.index_file(filepath)
 
         elif event_type == "deleted":
             logger.info(f"Processing deleted: {filepath}")
-            file_id = VectorStore.generate_id(filepath)
-            self.store.delete(file_id)
+            parent_id = VectorStore.generate_id(filepath)
+            self.store.delete(parent_id)
 
-    def compute_links_loop(self):
-        while self._running:
-            time.sleep(60)
-            self.linker.compute_links()
-
-    def initial_scan(self):
-        logger.info("Starting initial scan of watched user directories...")
-        ignored_names = {'AppData', 'node_modules', '__pycache__', 'venv', '.venv', 'dist', 'build', 'target', 'site-packages'}
-        allowed_exts = {".py", ".txt", ".md", ".json", ".yaml", ".yml", ".js", ".ts", ".tsx", ".jsx", ".c", ".cpp", ".h", ".java", ".rs", ".go", ".pdf", ".docx", ".sql", ".ipynb"}
+    def initial_scan(self) -> None:
+        logger.info("Starting initial directory scan with dynamic semantic chunking...")
+        ignored_names = {'node_modules', '.git', 'venv', '__pycache__', 'dist', 'build', '.vscode', '.gemini', '.antigravity', 'AppData'}
         
-        for d in self.config.watcher.watch_directories:
-            if not d.exists() or not d.is_dir():
+        indexed_count = 0
+        for watch_dir in self.config.watcher.watch_directories:
+            if not watch_dir.exists():
+                logger.warning(f"Watch directory does not exist: {watch_dir}")
                 continue
-            for root, dirs, files in os.walk(d):
-                # Prune ignored directories in-place to avoid walking into dot-directories
+                
+            logger.info(f"Scanning directory: {watch_dir}")
+            for root, dirs, files in os.walk(watch_dir):
                 dirs[:] = [dr for dr in dirs if not dr.startswith('.') and dr not in ignored_names]
                 
                 for file in files:
                     if file.startswith('.'):
                         continue
                     filepath = Path(root) / file
-                    if filepath.suffix.lower() in allowed_exts:
-                        self.on_file_event("created", filepath)
-        logger.info("Initial scan complete.")
+                    if filepath.is_file():
+                        self.index_file(filepath)
+                        indexed_count += 1
 
-    def start(self):
-        logger.info(r"""
-   _____                           _   _      ______  _____ 
-  / ____|                         | | (_)    |  ____|/ ____|
- | (___   ___ _ __ ___   __ _ _ __| |_ _  ___| |__  | (___  
-  \___ \ / _ \ '_ ` _ \ / _` | '__| __| |/ __|  __|  \___ \ 
-  ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |
- |_____/ \___|_| |_| |_|\__,_|_|   \__|_|\___|_|    |_____/ 
-        """)
-        logger.info("Starting SemanticFS Daemon...")
-        
+        logger.info(f"Initial scan complete. {indexed_count} files dynamically chunked and indexed.")
+
+    def run(self) -> None:
+        logger.info("SemanticFS Daemon initializing...")
         self.initial_scan()
-        
-        self.watcher = FileWatcher(self.config.watcher.watch_directories, self.on_file_event)
-        self.watcher.start()
-        
-        threading.Thread(target=self.compute_links_loop, daemon=True).start()
 
-    def stop(self):
-        logger.info("Stopping SemanticFS Daemon...")
+        self.watcher = FileWatcher(
+            directories=self.config.watcher.watch_directories,
+            callback=self.on_file_event,
+            debounce_ms=self.config.watcher.debounce_ms
+        )
+        self.watcher.start()
+        logger.info("FileWatcher started. Listening for ambient file events...")
+
+        def signal_handler(sig, frame):
+            logger.info("Shutting down daemon...")
+            self.stop()
+            sys.exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        while self._running:
+            time.sleep(1.0)
+
+    def stop(self) -> None:
         self._running = False
         if self.watcher:
             self.watcher.stop()
+        logger.info("Daemon stopped.")
 
-@click.command()
-@click.option("--watch", multiple=True, type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path))
-@click.option("--config", type=click.Path(exists=True, dir_okay=False, path_type=Path))
-def main(watch: tuple[Path], config: Path | None):
-    cfg = Config.get_instance(config)
-    if watch:
-        cfg.watcher.watch_directories.extend(watch)
-
-    daemon = DaemonContext(cfg)
-    
-    def handle_sigint(sig, frame):
-        daemon.stop()
-        sys.exit(0)
-        
-    signal.signal(signal.SIGINT, handle_sigint)
-    signal.signal(signal.SIGTERM, handle_sigint)
-    
-    daemon.start()
-    
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        daemon.stop()
+def main():
+    config = Config.get_instance()
+    daemon_ctx = DaemonContext(config)
+    daemon_ctx.run()
 
 if __name__ == "__main__":
     main()

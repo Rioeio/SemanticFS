@@ -76,27 +76,37 @@ def render_table(results, selected_index: int | None = None) -> Table:
     table = Table(title="SemanticFS Search Results", expand=True)
     table.add_column("Rank", justify="right", style="cyan", width=6)
     table.add_column("Score", style="magenta", width=14)
-    table.add_column("Filename", style="green")
+    table.add_column("Filename / Line Range", style="green")
     table.add_column("Filepath", style="dim")
-    table.add_column("Context", style="yellow")
+    table.add_column("Match Snippet", style="yellow")
 
     for i, res in enumerate(results):
         score_str = print_score_bar(res.score)
+        
+        line_info = ""
+        start_line = getattr(res, "start_line", 1)
+        end_line = getattr(res, "end_line", 1)
+        if start_line and end_line and (start_line > 1 or end_line > 1):
+            line_info = f" [yellow]#L{start_line}-L{end_line}[/yellow]"
+            
+        filename_display = f"{res.filename}{line_info}"
+        snippet = str(res.metadata.get("content_snippet", res.metadata.get("context_window", "")))[:60]
+        
         if selected_index is not None and i == selected_index:
             table.add_row(
                 f"[bold cyan]➔ {i+1}[/bold cyan]",
                 f"[bold cyan]{score_str}[/bold cyan]",
-                f"[bold cyan underline]{res.filename}[/bold cyan underline]",
+                f"[bold cyan underline]{filename_display}[/bold cyan underline]",
                 f"[bold cyan]{res.filepath}[/bold cyan]",
-                f"[bold cyan]{str(res.metadata.get('context_window', ''))}[/bold cyan]"
+                f"[bold cyan]{snippet}[/bold cyan]"
             )
         else:
             table.add_row(
                 str(i + 1),
                 score_str,
-                res.filename,
+                filename_display,
                 res.filepath,
-                str(res.metadata.get("context_window", ""))
+                snippet
             )
     return table
 
