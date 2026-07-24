@@ -23,6 +23,19 @@ console = Console()
 PID_DIR = Path("~/.semanticfs").expanduser()
 DAEMON_PID_FILE = PID_DIR / "daemon.pid"
 
+def print_banner():
+    banner = [
+        "[bold cyan]      /\\_/\\ [/bold cyan]      [bold bright_magenta] _____                           _   _      ______  _____[/bold bright_magenta]",
+        "[bold cyan]     ( o.o )[/bold cyan]     [bold bright_magenta]/ ____|                         | | (_)    |  ____|/ ____|[/bold bright_magenta]",
+        "[bold cyan]      > ^ < [/bold cyan]    [bold bright_magenta]| (___   ___ _ __ ___   __ _ _ __| |_ _  ___| |__  | (___  [/bold bright_magenta]",
+        "[bold cyan]     /     \\ [/bold cyan]    [bold bright_magenta]\\___ \\ / _ \\ '_ ` _ \\ / _` | '__| __| |/ __|  __|  \\___ \\ [/bold bright_magenta]",
+        "[bold cyan]    (       )[/bold cyan]   [bold bright_magenta] ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |[/bold bright_magenta]",
+        "[bold cyan]     `-----' [/bold cyan]   [bold bright_magenta]|_____/ \\___|_| |_| |_|\\__,_|_|   \\__|_|\\___|_|    |_____/[/bold bright_magenta]",
+        "                 [bold green]● Local Neural Vector & Context Engine[/bold green] [dim cyan]v0.1.0[/dim cyan]\n"
+    ]
+    for line in banner:
+        console.print(line, highlight=False)
+
 def print_score_bar(score: float) -> str:
     filled = int(score * 10)
     empty = 10 - filled
@@ -148,6 +161,7 @@ def is_pid_running(pid: int) -> bool:
         return False
 
 def start_daemon():
+    print_banner()
     PID_DIR.mkdir(parents=True, exist_ok=True)
     python_exe = sys.executable
 
@@ -180,6 +194,7 @@ def stop_daemon():
         console.print("[yellow]No running daemon found.[/yellow]")
 
 def show_status_and_analytics():
+    print_banner()
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
     linker = FileLinker(config.linker.db_path)
@@ -210,6 +225,7 @@ def show_status_and_analytics():
     console.print(table)
 
 def run_reindex():
+    print_banner()
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
     
@@ -238,6 +254,7 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
 
     if not query_parts and not (show_stats or clear_index or open_file):
+        print_banner()
         console.print("[bold cyan]SemanticFS CLI — Terminal Commands[/bold cyan]\n")
         console.print("  [bold green]sfind <query>[/bold green]         - Search files by natural language context")
         console.print("  [bold green]sfind stats[/bold green]           - Master analytics: daemon status, vectors, DB size, file count")
@@ -254,6 +271,7 @@ def main(query_parts: tuple[str, ...], limit: int, filetype: str | None, open_fi
     lower_args = set(p.lower() for p in query_parts)
 
     if "train" in lower_args:
+        print_banner()
         from semanticfs.trainer import train_local_model
         train_local_model(epochs=1)
         return
