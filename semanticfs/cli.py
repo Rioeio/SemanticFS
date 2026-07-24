@@ -33,7 +33,7 @@ def print_banner():
         "[bold cyan]     /     \\ [/bold cyan]    [bold bright_magenta]\\___ \\ / _ \\ '_ ` _ \\ / _` | '__| __| |/ __|  __|  \\___ \\ [/bold bright_magenta]",
         "[bold cyan]    (       )[/bold cyan]   [bold bright_magenta] ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |[/bold bright_magenta]",
         "[bold cyan]     `-----' [/bold cyan]   [bold bright_magenta]|_____/ \\___|_| |_| |_|\\__,_|_|   \\__|_|\\___|_|    |_____/[/bold bright_magenta]",
-        "                 [bold green]● Local Neural Vector & Context Engine[/bold green] [dim cyan]v0.1.0[/dim cyan]\n"
+        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Sub-20ms IPC[/bold yellow]  [bold bright_cyan]● CLIP Vision[/bold bright_cyan] [dim cyan]v0.1.0[/dim cyan]\n"
     ]
     for line in banner:
         console.print(line, highlight=False)
@@ -41,7 +41,13 @@ def print_banner():
 def print_score_bar(score: float) -> str:
     filled = int(score * 10)
     empty = 10 - filled
-    return f"[{'█' * filled}{'░' * empty}]"
+    if score >= 0.8:
+        bar_style = "bold green"
+    elif score >= 0.5:
+        bar_style = "bold yellow"
+    else:
+        bar_style = "bold magenta"
+    return f"[{bar_style}]{'█' * filled}[/{bar_style}][dim]{'░' * empty}[/dim]"
 
 def get_dir_size_mb(path: Path) -> float:
     """Calculate total size of directory in megabytes."""
@@ -62,11 +68,11 @@ def get_dir_size_mb(path: Path) -> float:
 
 def open_path(filepath: str, open_with_code: bool = False):
     if open_with_code:
-        console.print(f"\n[bold blue]💻 Opening in VS Code:[/bold blue] {filepath}")
+        console.print(f"\n[bold blue]💻 Opening in VS Code:[/bold blue] [underline]{filepath}[/underline]")
         subprocess.run(["code", filepath], shell=True)
         return
 
-    console.print(f"\n[bold green]🚀 Opening:[/bold green] {filepath}")
+    console.print(f"\n[bold green]🚀 Launching File:[/bold green] [underline]{filepath}[/underline]")
     if os.name == 'nt':
         os.startfile(filepath)
     elif sys.platform == 'darwin':
@@ -75,37 +81,38 @@ def open_path(filepath: str, open_with_code: bool = False):
         os.system(f"xdg-open '{filepath}'")
 
 def render_table(results, selected_index: int | None = None) -> Table:
-    table = Table(title="SemanticFS Search Results", expand=True)
-    table.add_column("Rank", justify="right", style="cyan", width=6)
-    table.add_column("Score", style="magenta", width=14)
-    table.add_column("Filename / Line Range", style="green")
-    table.add_column("Filepath", style="dim")
+    table = Table(title="✨ SemanticFS Neural Search Results", expand=True, border_style="cyan")
+    table.add_column("Rank", justify="center", style="bold cyan", width=6)
+    table.add_column("Relevance Score", style="bold magenta", width=18, justify="center")
+    table.add_column("Filename / Line Range", style="bold green")
+    table.add_column("Filepath", style="dim cyan")
     table.add_column("Match Snippet", style="yellow")
 
     for i, res in enumerate(results):
-        score_str = print_score_bar(res.score)
+        score_bar = print_score_bar(res.score)
+        score_pct = f"{(res.score * 100):.0f}% {score_bar}"
         
         line_info = ""
         start_line = getattr(res, "start_line", 1)
         end_line = getattr(res, "end_line", 1)
         if start_line and end_line and (start_line > 1 or end_line > 1):
-            line_info = f" [yellow]#L{start_line}-L{end_line}[/yellow]"
+            line_info = f" [bold yellow]#L{start_line}-L{end_line}[/bold yellow]"
             
         filename_display = f"{res.filename}{line_info}"
-        snippet = str(res.metadata.get("content_snippet", res.metadata.get("context_window", "")))[:60]
+        snippet = str(res.metadata.get("content_snippet", res.metadata.get("context_window", "")))[:65]
         
         if selected_index is not None and i == selected_index:
             table.add_row(
-                f"[bold cyan]➔ {i+1}[/bold cyan]",
-                f"[bold cyan]{score_str}[/bold cyan]",
+                f"[bold yellow]➔ {i+1}[/bold yellow]",
+                score_pct,
                 f"[bold cyan underline]{filename_display}[/bold cyan underline]",
                 f"[bold cyan]{res.filepath}[/bold cyan]",
-                f"[bold cyan]{snippet}[/bold cyan]"
+                f"[bold white]{snippet}[/bold white]"
             )
         else:
             table.add_row(
-                str(i + 1),
-                score_str,
+                f"[dim]{i + 1}[/dim]",
+                score_pct,
                 filename_display,
                 res.filepath,
                 snippet
@@ -133,13 +140,13 @@ def render_table_with_preview(results, selected_index: int) -> Group:
                 
                 lexer = filepath.suffix.lstrip('.') if filepath.suffix else 'text'
                 syntax = Syntax(snippet_lines, lexer, theme="monokai", line_numbers=True, start_line=start_l+1)
-                preview_panel = Panel(syntax, title=f"📄 Preview: {filepath.name} (Lines {start_l+1}-{end_l})", border_style="cyan")
+                preview_panel = Panel(syntax, title=f"📄 [bold bright_cyan]Live Preview:[/bold bright_cyan] [bold yellow]{filepath.name}[/bold yellow] (Lines {start_l+1}-{end_l})", border_style="bright_magenta")
                 return Group(table, preview_panel)
         except Exception:
             pass
             
-    snippet = str(selected_res.metadata.get("content_snippet", "No preview available"))
-    preview_panel = Panel(snippet, title=f"📄 Match Snippet: {filepath.name}", border_style="cyan")
+    snippet = str(selected_res.metadata.get("content_snippet", "No preview snippet available"))
+    preview_panel = Panel(snippet, title=f"📄 [bold bright_cyan]Match Snippet:[/bold bright_cyan] [bold yellow]{filepath.name}[/bold yellow]", border_style="cyan")
     return Group(table, preview_panel)
 
 def interactive_select(results, query: str, open_with_code: bool = False) -> None:
@@ -153,7 +160,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
     if os.name == 'nt':
         import msvcrt
         
-        console.print("\n[bold cyan]Use ↑/↓ Arrow Keys to select, [Enter] to open, [c] for VS Code, [1-5] quick pick, [q/Esc] to exit:[/bold cyan]\n")
+        console.print("\n[bold bright_cyan]⌨️ Navigation Shortcuts:[/bold bright_cyan] [bold green][↑/↓ Arrow Keys][/bold green] Select  [bold green][Enter][/bold green] Open  [bold blue][c][/bold blue] VS Code  [bold yellow][1-5][/bold yellow] Quick Pick  [bold red][q/Esc][/bold red] Quit\n")
         
         with Live(render_table_with_preview(results, selected_index), console=console, refresh_per_second=10) as live:
             while True:
@@ -217,7 +224,7 @@ def start_daemon():
 
     proc = subprocess.Popen([python_exe, "-m", "semanticfs.daemon"], cwd="C:/Dev/SemanticFS", creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     DAEMON_PID_FILE.write_text(str(proc.pid))
-    console.print(f"[bold green]✔ Ambient Daemon started on demand (PID: {proc.pid})[/bold green]")
+    console.print(f"[bold green]✔ Ambient Daemon & IPC Pre-Warmed Server started (PID: {proc.pid})[/bold green]")
 
 def stop_daemon():
     if DAEMON_PID_FILE.exists():
@@ -242,7 +249,7 @@ def show_status_and_analytics():
     linker = FileLinker(config.linker.db_path)
 
     d_running = DAEMON_PID_FILE.exists() and is_pid_running(int(DAEMON_PID_FILE.read_text().strip()))
-    d_status = "[bold green]RUNNING[/bold green]" if d_running else "[bold red]STOPPED[/bold red]"
+    d_status = "[bold green]● RUNNING (Sub-20ms IPC Active)[/bold green]" if d_running else "[bold red]● STOPPED[/bold red]"
 
     file_count = store.count()
     vector_count = file_count
@@ -250,15 +257,16 @@ def show_status_and_analytics():
     total_links = linker.get_total_links()
     db_size_mb = get_dir_size_mb(config.storage.db_path)
 
-    table = Table(title="📊 SemanticFS Master System & Vector Analytics", expand=True)
+    table = Table(title="📊 SemanticFS Master System & Vector Analytics", expand=True, border_style="cyan")
     table.add_column("Category / Metric", style="cyan bold")
     table.add_column("Value / Status", style="green bold", justify="right")
     table.add_column("Description", style="dim")
 
-    table.add_row("Ambient Daemon Status", d_status, "Background filesystem event tracker")
+    table.add_row("Ambient Daemon Status", d_status, "Background filesystem tracker & IPC socket server")
     table.add_row("Total Files/Chunks Indexed", str(file_count), "Total semantic chunks stored in vector store")
     table.add_row("Vector Embeddings Stored", str(vector_count), "384-dimensional dense neural vectors generated")
     table.add_row("Neural Vector Model", config.embedding.model_name, "Local transformer model (all-MiniLM-L6-v2)")
+    table.add_row("Multimodal Vision Model", "openai/clip-vit-base-patch32", "Zero-shot visual scene classifier")
     table.add_row("Vector DB Disk Size", f"{db_size_mb} MB", "ChromaDB vector store storage footprint")
     table.add_row("File Accesses Logged", str(access_count), "Total ambient file interactions recorded")
     table.add_row("Co-Access Links Formed", str(total_links), "Calculated implicit file association edges")
@@ -284,7 +292,7 @@ def run_reindex():
 def search_git_commits(query: str):
     print_banner()
     config = Config.get_instance()
-    console.print(f"[bold cyan]🔍 Searching Git commits for:[/bold cyan] '{query}'\n")
+    console.print(f"[bold cyan]🔍 Searching Git commit logs for:[/bold cyan] '[bold yellow]{query}[/bold yellow]'\n")
     
     found_any = False
     for watch_dir in config.watcher.watch_directories:
@@ -295,8 +303,8 @@ def search_git_commits(query: str):
                 res = subprocess.run(cmd, cwd=watch_dir, shell=True, capture_output=True, text=True)
                 if res.stdout.strip():
                     found_any = True
-                    table = Table(title=f"Git Commits in {watch_dir.name}")
-                    table.add_column("Commit Hash", style="cyan")
+                    table = Table(title=f"Git Commits in {watch_dir.name}", border_style="cyan")
+                    table.add_column("Commit Hash", style="cyan bold")
                     table.add_column("Commit Message", style="green")
                     for line in res.stdout.strip().splitlines():
                         parts = line.split(" ", 1)
@@ -315,7 +323,7 @@ def show_completion():
 function sf { sfind $args }
 Register-ArgumentCompleter -Native -CommandName sfind -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $subcommands = @('start', 'stop', 'status', 'stats', 'train', 'reindex', 'recent', 'list-dirs', 'add-dir', 'commit', 'completion', '--clear', '--code', '--since')
+    $subcommands = @('start', 'stop', 'status', 'stats', 'train', 'reindex', 'recent', 'list-dirs', 'add-dir', 'commit', 'completion', 'onnx', 'mount', '--clear', '--code', '--since')
     $subcommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
@@ -361,6 +369,32 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
     except Exception:
         return None
 
+def show_main_help_menu():
+    print_banner()
+    table = Table(title="✨ SemanticFS CLI — Command Matrix", expand=True, border_style="bright_magenta")
+    table.add_column("Command Syntax", style="bold green", width=26)
+    table.add_column("Category", style="bold cyan", width=14)
+    table.add_column("Description", style="white")
+
+    table.add_row("sfind <query>", "Search", "Natural language context search + interactive menu & live preview")
+    table.add_row("sfind start", "IPC Engine", "Launch pre-warmed daemon IPC server for sub-20ms search")
+    table.add_row("sfind stop", "IPC Engine", "Stop ambient background tracking daemon")
+    table.add_row("sfind stats / status", "Analytics", "Master system analytics: daemon status, 384D vectors, DB size")
+    table.add_row("sfind commit <query>", "Git Search", "Search git commit messages across all monitored repositories")
+    table.add_row("sfind train", "AI Engine", "Fine-tune AI model directly on your local file vocabulary")
+    table.add_row("sfind onnx", "Optimization", "Export PyTorch model weights to ONNX INT8 quantized format")
+    table.add_row("sfind mount", "Virtual Drive", "Initialize virtual search shortcut directory for Windows Explorer")
+    table.add_row("sfind reindex", "Indexing", "Force full file re-scan & dynamic vector re-indexing across all drives")
+    table.add_row("sfind completion", "Shell", "Generate PowerShell auto-completion script for $PROFILE")
+    table.add_row("sfind list-dirs", "Watch Paths", "List all currently monitored workspace directories")
+    table.add_row("sfind add-dir <path>", "Watch Paths", "Register a new directory folder to the watch list")
+    table.add_row("sfind recent", "Activity", "Display 10 most recently modified files")
+    table.add_row("sfind --type pdf", "Filter Flag", "Filter search results by extension (pdf, py, docx, jpeg)")
+    table.add_row("sfind --since 7d", "Filter Flag", "Filter search results by modification time (7d, 24h, 30m)")
+    table.add_row("sfind --code", "Integration", "Automatically open top search match directly in VS Code")
+
+    console.print(table)
+
 @click.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("query_parts", nargs=-1)
 @click.option("--limit", "-l", default=5, help="Number of results")
@@ -389,20 +423,7 @@ def main(
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
 
     if not query_parts and not (show_stats or clear_index or open_file):
-        print_banner()
-        console.print("[bold cyan]SemanticFS CLI — Terminal Commands[/bold cyan]\n")
-        console.print("  [bold green]sfind <query>[/bold green]         - Search files by natural language context")
-        console.print("  [bold green]sfind commit <query>[/bold green]  - Search git commit messages")
-        console.print("  [bold green]sfind completion[/bold green]      - Generate PowerShell autocomplete script")
-        console.print("  [bold green]sfind stats[/bold green]           - Master analytics: daemon status, vectors, DB size, file count")
-        console.print("  [bold green]sfind train[/bold green]           - Fine-tune AI model on your local files")
-        console.print("  [bold green]sfind reindex[/bold green]         - Force full re-scan & vector re-indexing")
-        console.print("  [bold green]sfind start[/bold green]           - Launch Ambient Daemon on demand")
-        console.print("  [bold green]sfind stop[/bold green]            - Stop Ambient Daemon")
-        console.print("  [bold green]sfind add-dir <path>[/bold green]  - Add a directory to watch list")
-        console.print("  [bold green]sfind list-dirs[/bold green]       - List all monitored directories")
-        console.print("  [bold green]sfind recent[/bold green]          - Show recently modified files")
-        console.print("  [bold green]sfind --clear[/bold green]         - Clear vector index")
+        show_main_help_menu()
         return
 
     lower_args = set(p.lower() for p in query_parts)
@@ -459,7 +480,7 @@ def main(
             console.print(f"[red]Directory does not exist:[/red] {new_path}")
         return
     elif "list-dirs" in lower_args:
-        table = Table(title="Monitored Directories")
+        table = Table(title="Monitored Directories", border_style="cyan")
         table.add_column("#", justify="right", style="cyan")
         table.add_column("Directory Path", style="green")
         for i, d in enumerate(config.watcher.watch_directories):
@@ -468,7 +489,7 @@ def main(
         return
     elif "recent" in lower_args:
         items = store.get_all(limit=10)
-        table = Table(title="Recently Modified Files")
+        table = Table(title="Recently Modified Files", border_style="cyan")
         table.add_column("Filename", style="green")
         table.add_column("Filepath", style="dim")
         table.add_column("Context Window", style="yellow")
