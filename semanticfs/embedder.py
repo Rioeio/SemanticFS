@@ -5,10 +5,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-import fitz  # PyMuPDF
-import docx
-from sentence_transformers import SentenceTransformer
-
 logger = logging.getLogger(__name__)
 
 class Embedder:
@@ -29,6 +25,7 @@ class Embedder:
     def model(self):
         if self._model is None:
             logger.info(f"Loading embedding model from '{self.model_path}'...")
+            from sentence_transformers import SentenceTransformer
             self._model = SentenceTransformer(self.model_path)
         return self._model
 
@@ -57,11 +54,13 @@ class Embedder:
         content = ""
         try:
             if ext == ".pdf":
+                import fitz  # PyMuPDF
                 doc = fitz.open(filepath)
                 for page in doc:
                     content += page.get_text()
                 doc.close()
             elif ext == ".docx":
+                import docx
                 doc = docx.Document(filepath)
                 content = "\n".join([p.text for p in doc.paragraphs])
             elif ext in (".xlsx", ".xls", ".csv", ".tsv"):

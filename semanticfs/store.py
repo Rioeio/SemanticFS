@@ -6,8 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import chromadb
-
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -30,6 +28,7 @@ class VectorStore:
     def _get_collection(self):
         """Lazy load ChromaDB client and collection."""
         if self._client is None or self._collection is None:
+            import chromadb
             self._client = chromadb.PersistentClient(path=str(self.db_path))
             self._collection = self._client.get_or_create_collection(name=self.collection_name)
         return self._collection
