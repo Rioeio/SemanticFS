@@ -18,9 +18,10 @@ def chunk_file_content(
     filepath: Path,
     content: str,
     max_words: int = 200,
-    overlap_words: int = 40
+    overlap_words: int = 40,
+    max_chunks_per_file: int = 25
 ) -> list[FileChunk]:
-    """Dynamically splits long files into overlapping semantic chunks with line number tracking."""
+    """Dynamically splits long files into overlapping semantic chunks with line number tracking and max chunk cap."""
     if not content or not content.strip():
         return [
             FileChunk(
@@ -37,7 +38,6 @@ def chunk_file_content(
     lines = content.splitlines()
     total_lines = len(lines)
 
-    # If file is small (< 250 words or < 50 lines), return 1 single chunk
     words = content.split()
     if len(words) <= max_words or total_lines <= 40:
         return [
@@ -59,6 +59,9 @@ def chunk_file_content(
     start_line = 1
 
     for line_idx, line in enumerate(lines, start=1):
+        if len(chunks) >= max_chunks_per_file:
+            break
+
         line_words = len(line.split())
         current_lines.append(line)
         current_word_count += line_words
@@ -82,7 +85,6 @@ def chunk_file_content(
                 )
             )
 
-            # Slide window: keep last few lines for overlap
             overlap_count = 0
             overlap_lines: list[str] = []
             for prev_line in reversed(current_lines):

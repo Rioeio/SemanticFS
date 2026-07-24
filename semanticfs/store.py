@@ -8,6 +8,13 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+STOPWORDS = {
+    "the", "open", "from", "many", "years", "ago", "with", "this", "that", "some",
+    "what", "where", "how", "file", "files", "picture", "pictures", "image", "images",
+    "doc", "docs", "document", "documents", "show", "find", "get", "look", "search",
+    "please", "can", "you", "need", "give", "want", "for", "and", "are", "have"
+}
+
 @dataclass
 class SearchResult:
     id: str
@@ -56,16 +63,15 @@ class VectorStore:
         """Remove a file and all its chunks from the store."""
         try:
             coll = self._get_collection()
-            # Delete any chunks starting with parent_file_id
             coll.delete(where={"filepath": parent_file_id})
         except Exception as e:
             logger.debug(f"delete error: {e}")
 
     def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None) -> list[SearchResult]:
-        """Semantic search with dynamic chunk deduplication & hybrid keyword boosting."""
+        """Semantic search with dynamic chunk deduplication, stopword filtering, & hybrid keyword boosting."""
         try:
             coll = self._get_collection()
-            fetch_limit = max(n_results * 4, 100)
+            fetch_limit = max(n_results * 5, 150)
             results = coll.query(
                 query_embeddings=[query_embedding],
                 n_results=fetch_limit,
@@ -75,7 +81,7 @@ class VectorStore:
             logger.error(f"search error: {e}")
             return []
         
-        query_words = [w.lower() for w in query_text.split() if len(w) > 1]
+        query_words = [w.lower() for w in query_text.split() if len(w) > 2 and w.lower() not in STOPWORDS]
         grouped_results: dict[str, SearchResult] = {}
 
         if results and results['ids'] and results['ids'][0]:
@@ -97,8 +103,8 @@ class VectorStore:
                         if word in filename_lower:
                             score += 0.45
                         elif word in filepath_lower:
-                            score += 0.20
-                
+                            score += 0.25
+
                 score = min(1.0, score)
                 start_line = int(metadata.get("start_line", 1))
                 end_line = int(metadata.get("end_line", 1))
@@ -114,7 +120,6 @@ class VectorStore:
                     end_line=end_line
                 )
 
-                # Keep highest scoring chunk per file
                 if filepath not in grouped_results or res.score > grouped_results[filepath].score:
                     grouped_results[filepath] = res
 
@@ -167,7 +172,7 @@ class VectorStore:
             logger.error(f"clear error: {e}")
 
     def count(self) -> int:
-        """Count vectors/chunks in store using fast direct SQLite query if available."""
+        """Count files in store using fast direct SQLite query if available."""
         sqlite_file = self.db_path / "chroma.sqlite3"
         if sqlite_file.exists():
             try:

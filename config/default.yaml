@@ -3,11 +3,15 @@
 # Directories to watch for user files
 watch_directories:
   - "C:\\Users\\Manoj\\OneDrive\\Documents"
+  - "C:\\Users\\Manoj\\Documents"
   - "C:\\Users\\Manoj\\Desktop"
   - "C:\\Users\\Manoj\\Downloads"
+  - "C:\\Users\\Manoj\\Pictures"
+  - "C:\\Users\\Manoj\\Videos"
+  - "C:\\Users\\Manoj\\Music"
   - "C:\\Dev"
 
-# File types to index (glob patterns)
+# File types to index
 include_patterns:
   - "*.py"
   - "*.js"
@@ -32,6 +36,8 @@ include_patterns:
   - "*.csv"
   - "*.pdf"
   - "*.docx"
+  - "*.pptx"
+  - "*.xlsx"
   - "*.tex"
   - "*.sh"
   - "*.bat"
@@ -40,6 +46,11 @@ include_patterns:
   - "*.r"
   - "*.R"
   - "*.ipynb"
+  - "*.png"
+  - "*.jpg"
+  - "*.jpeg"
+  - "*.mp4"
+  - "*.mp3"
 
 # Exclude hidden system folders (.*), caches, extensions, and build artifacts
 exclude_patterns:
@@ -78,7 +89,7 @@ context:
 watcher:
   debounce_ms: 500
   initial_scan: true
-  max_file_size_mb: 10
+  max_file_size_mb: 25
 
 # Server settings
 server:
