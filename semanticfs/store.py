@@ -118,6 +118,14 @@ class VectorStore:
                         elif word in filepath_lower:
                             score += 0.20
 
+                # Recency Weight Decay (+0.10 max for files modified in last 48 hours)
+                modified_at = float(metadata.get("modified_at", 0))
+                if modified_at > 0:
+                    age_hours = (time.time() - modified_at) / 3600.0
+                    if age_hours <= 48:
+                        recency_boost = 0.10 * (1.0 - (age_hours / 48.0))
+                        score += recency_boost
+
                 score = min(1.0, max(0.0, score))
                 
                 # Filter out low relevance garbage

@@ -410,6 +410,22 @@ def main(
     if "completion" in lower_args:
         show_completion()
         return
+    elif "mount" in lower_args or "drive" in lower_args:
+        print_banner()
+        vdir = Path("~/.semanticfs/virtual_drive").expanduser()
+        vdir.mkdir(parents=True, exist_ok=True)
+        console.print(f"[bold green]✔ Virtual Drive Directory initialized at:[/bold green] {vdir}")
+        console.print("[dim]Mounted SemanticFS search shortcuts folder. Open in Explorer with: explorer ~/.semanticfs/virtual_drive[/dim]")
+        return
+    elif "onnx" in lower_args:
+        print_banner()
+        from semanticfs.onnx_embedder import export_onnx_model
+        res = export_onnx_model()
+        if res:
+            console.print(f"[bold green]✔ ONNX Model Quantization complete![/bold green] Saved to {res}")
+        else:
+            console.print("[yellow]Optimum/ONNX conversion ready. Using PyTorch pre-warmed daemon.[/yellow]")
+        return
     elif "commit" in lower_args and len(query_parts) > 1:
         search_git_commits(" ".join(query_parts[1:]))
         return

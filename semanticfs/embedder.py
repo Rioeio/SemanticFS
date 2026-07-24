@@ -101,6 +101,9 @@ class Embedder:
             elif ext in (".py", ".js", ".ts", ".tsx", ".jsx", ".html", ".css", ".c", ".cpp", ".h", ".hpp", ".cs", ".java", ".rs", ".go", ".rb", ".php", ".swift", ".kt", ".md", ".txt", ".sh", ".bat", ".ps1", ".sql", ".r", ".R", ".log"):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read(10000)
+            elif ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"):
+                from semanticfs.vision import extract_image_visual_metadata
+                content = extract_image_visual_metadata(filepath)
             else:
                 stat = filepath.stat() if filepath.exists() else None
                 size_kb = round(stat.st_size / 1024, 1) if stat else 0
