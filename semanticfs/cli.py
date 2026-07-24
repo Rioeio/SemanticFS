@@ -34,9 +34,13 @@ def get_dir_size_mb(path: Path) -> float:
         return 0.0
     total = 0
     try:
-        for p in path.glob("**/*"):
+        for p in path.iterdir():
             if p.is_file():
                 total += p.stat().st_size
+            elif p.is_dir():
+                for subp in p.iterdir():
+                    if subp.is_file():
+                        total += subp.stat().st_size
     except Exception:
         pass
     return round(total / (1024 * 1024), 2)

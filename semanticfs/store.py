@@ -152,7 +152,21 @@ class VectorStore:
             logger.error(f"clear error: {e}")
 
     def count(self) -> int:
-        """Count files in store."""
+        """Count files in store using ultra-fast direct SQLite query if available."""
+        sqlite_file = self.db_path / "chroma.sqlite3"
+        if sqlite_file.exists():
+            try:
+                import sqlite3
+                conn = sqlite3.connect(sqlite_file, timeout=2.0)
+                cursor = conn.cursor()
+                cursor.execute('SELECT COUNT(*) FROM embeddings')
+                row = cursor.fetchone()
+                conn.close()
+                if row:
+                    return row[0]
+            except Exception:
+                pass
+
         try:
             coll = self._get_collection()
             return coll.count()
