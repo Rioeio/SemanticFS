@@ -339,6 +339,28 @@ def parse_since(since_str: str) -> float:
         pass
     return 0.0
 
+def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
+    import json
+    import socket
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(0.4)
+        sock.connect(("127.0.0.1", port))
+        sock.sendall(json.dumps({"query": query}).encode("utf-8"))
+        
+        data = b""
+        while True:
+            chunk = sock.recv(8192)
+            if not chunk:
+                break
+            data += chunk
+        sock.close()
+        
+        res = json.loads(data.decode("utf-8"))
+        return res.get("embedding")
+    except Exception:
+        return None
+
 @click.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("query_parts", nargs=-1)
 @click.option("--limit", "-l", default=5, help="Number of results")
@@ -446,8 +468,10 @@ def main(
 
     query = " ".join(query_parts)
     
-    embedder = Embedder(model, config.embedding.max_tokens)
-    query_embedding = embedder.embed_text(query)
+    query_embedding = query_daemon_embedding(query)
+    if query_embedding is None:
+        embedder = Embedder(model, config.embedding.max_tokens)
+        query_embedding = embedder.embed_text(query)
     
     filters = {}
     if filetype:

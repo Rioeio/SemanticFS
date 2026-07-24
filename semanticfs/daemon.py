@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import logging
 import os
 import signal
+import socket
 import sys
 import threading
 import time
@@ -39,6 +41,46 @@ class DaemonContext:
         )
         self.watcher: FileWatcher | None = None
         self._running = True
+
+    def start_ipc_server(self, port: int = 9876):
+        """Pre-warmed background IPC socket server for instant sub-20ms search embeddings."""
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            server.bind(("127.0.0.1", port))
+            server.listen(10)
+            logger.info(f"Instant Search IPC Server listening on 127.0.0.1:{port}")
+        except Exception as e:
+            logger.debug(f"IPC socket bind error: {e}")
+            return
+
+        def handle_client(conn):
+            try:
+                conn.settimeout(1.0)
+                data = conn.recv(8192).decode("utf-8")
+                if data:
+                    req = json.loads(data)
+                    query = req.get("query", "")
+                    if query:
+                        emb = self.embedder.embed_text(query)
+                        conn.sendall(json.dumps({"embedding": emb}).encode("utf-8"))
+            except Exception:
+                pass
+            finally:
+                conn.close()
+
+        def listen_loop():
+            while self._running:
+                try:
+                    conn, _ = server.accept()
+                    t = threading.Thread(target=handle_client, args=(conn,), daemon=True)
+                    t.start()
+                except Exception:
+                    break
+            server.close()
+
+        t = threading.Thread(target=listen_loop, daemon=True)
+        t.start()
 
     def index_file(self, filepath: Path) -> None:
         """Index a single file with dynamic semantic chunking."""
@@ -116,6 +158,7 @@ class DaemonContext:
     def run(self) -> None:
         logger.info("SemanticFS Daemon initializing...")
         self.initial_scan()
+        self.start_ipc_server()
 
         self.watcher = FileWatcher(
             directories=self.config.watcher.watch_directories,
