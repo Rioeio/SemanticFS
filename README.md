@@ -107,7 +107,7 @@ sfind stats
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                       sfind CLI                             │
-│       (Interactive Rich Live Menu / Vector Search)           │
+│       (Interactive Rich Live Menu / Vector Search)          │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                ┌───────────────┴───────────────┐
@@ -120,8 +120,8 @@ sfind stats
                ▲                               ▲
                │                               │
 ┌──────────────┴───────────────────────────────┴──────────────┐
-│                  Ambient File Watcher Daemon                 │
-│         (Context Snapshot + Local File Event Tracker)        │
+│                  Ambient File Watcher Daemon                │
+│         (Context Snapshot + Local File Event Tracker)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
