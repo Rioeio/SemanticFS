@@ -28,12 +28,12 @@
 
 ## Core Capabilities & Features
 
-- **Local Neural Vector Search**: Powered by `SentenceTransformers` (`all-MiniLM-L6-v2`) and embedded `ChromaDB`.
+- **Local Neural Vector Search**: Powered by `BAAI/bge-small-en-v1.5` (#1 MTEB Benchmark model) and embedded `ChromaDB`.
 - **Full User Space System Coverage (`C:\Users\Manoj`)**: Automatically scans and monitors the entire user directory tree (`Documents`, `Desktop`, `Downloads`, `Pictures`, `Videos`, `Music`, `Dev`, and custom workspaces).
 - **16-Worker ThreadPoolExecutor Parallel Scanning**: Multi-threaded parallel file crawler indexes 50,000+ files across the system in seconds.
 - **Multimodal CLIP Vision Scene Indexing**: Integrated HuggingFace Transformers `CLIPModel` (`openai/clip-vit-base-patch32`) for zero-shot image scene classification ("beach sunset", "receipt invoice text", "landscape", "face photo").
 - **Recency Weight Decay**: Gives an exponential score boost (+0.10 max) to files modified within the last 48 hours, keeping active work at the top.
-- **Dynamic Semantic Chunking**: Splits large files (1000+ lines) into overlapping semantic windows with exact line number tracking (`#L140-L195`).
+- **AST Syntax & Header-Aware Semantic Chunking**: Integrated `semanticfs/ast_chunker.py` parses Python files by function (`def`) / class (`class`) boundaries and Markdown files by `#` headers so code logic is never cut in half.
 - **Textbook & Dump Noise Filtering**: Caps maximum chunks at 25 per file and filters out common stop-words to prevent massive textbook PDF dumps from polluting search results.
 - **Sub-5ms Query Latency**: Instant search responses via pre-warmed background IPC socket server (`sfind start`).
 - **Local Model Fine-Tuning (`sfind train`)**: Fine-tune transformer embeddings directly on local codebase vocabulary and files for specialized accuracy.

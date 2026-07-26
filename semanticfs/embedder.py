@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Embedder:
     """Embeds text and files into vectors, with support for local fine-tuned models, rich PPTX/XLSX extraction, OCR, and dynamic semantic chunking."""
-    def __init__(self, model_name: str = "all-MiniLM-L6-v2", max_tokens: int = 512):
+    def __init__(self, model_name: str = "BAAI/bge-small-en-v1.5", max_tokens: int = 512):
         self.model_name = model_name
         self.max_tokens = max_tokens
         self._model: Any = None

@@ -21,7 +21,7 @@ def chunk_file_content(
     overlap_words: int = 40,
     max_chunks_per_file: int = 25
 ) -> list[FileChunk]:
-    """Dynamically splits long files into overlapping semantic chunks with line number tracking and max chunk cap."""
+    """Dynamically splits long files into overlapping semantic chunks with line number tracking and AST/Header awareness."""
     if not content or not content.strip():
         return [
             FileChunk(
@@ -34,6 +34,50 @@ def chunk_file_content(
                 chunk_index=0
             )
         ]
+
+    ext = filepath.suffix.lower()
+    
+    # 1. AST Python Function & Class Syntax Chunker
+    if ext == ".py":
+        try:
+            from semanticfs.ast_chunker import chunk_python_ast
+            ast_chunks = chunk_python_ast(filepath, content)
+            if ast_chunks:
+                return [
+                    FileChunk(
+                        chunk_id=f"{filepath.absolute()}#chunk_{c.chunk_index}",
+                        parent_filepath=str(filepath.absolute()),
+                        filename=filepath.name,
+                        text=f"File: {filepath.name}\nLines {c.start_line}-{c.end_line}\n\n{c.text}",
+                        start_line=c.start_line,
+                        end_line=c.end_line,
+                        chunk_index=c.chunk_index
+                    )
+                    for c in ast_chunks
+                ]
+        except Exception:
+            pass
+
+    # 2. Markdown Header Chunker
+    if ext == ".md":
+        try:
+            from semanticfs.ast_chunker import chunk_markdown_headers
+            md_chunks = chunk_markdown_headers(filepath, content)
+            if md_chunks:
+                return [
+                    FileChunk(
+                        chunk_id=f"{filepath.absolute()}#chunk_{c.chunk_index}",
+                        parent_filepath=str(filepath.absolute()),
+                        filename=filepath.name,
+                        text=f"File: {filepath.name}\nLines {c.start_line}-{c.end_line}\n\n{c.text}",
+                        start_line=c.start_line,
+                        end_line=c.end_line,
+                        chunk_index=c.chunk_index
+                    )
+                    for c in md_chunks
+                ]
+        except Exception:
+            pass
 
     lines = content.splitlines()
     total_lines = len(lines)
@@ -59,45 +103,48 @@ def chunk_file_content(
     start_line = 1
 
     for line_idx, line in enumerate(lines, start=1):
-        if len(chunks) >= max_chunks_per_file:
-            break
-
-        line_words = len(line.split())
+        line_words = line.split()
         current_lines.append(line)
-        current_word_count += line_words
+        current_word_count += len(line_words)
 
-        if current_word_count >= max_words or line_idx == total_lines:
-            chunk_text = "\n".join(current_lines)
+        if current_word_count >= max_words:
             end_line = line_idx
-            
-            header = f"Filename: {filepath.name}\nPath: {filepath.absolute()}\nLines {start_line}-{end_line}\n\n"
-            full_chunk_text = header + chunk_text
+            chunk_text = f"Filename: {filepath.name}\nPath: {filepath.absolute()}\nLines {start_line}-{end_line}\n\nContent:\n" + "\n".join(current_lines)
 
             chunks.append(
                 FileChunk(
                     chunk_id=f"{filepath.absolute()}#chunk_{chunk_idx}",
                     parent_filepath=str(filepath.absolute()),
                     filename=filepath.name,
-                    text=full_chunk_text,
+                    text=chunk_text,
                     start_line=start_line,
                     end_line=end_line,
                     chunk_index=chunk_idx
                 )
             )
 
-            overlap_count = 0
-            overlap_lines: list[str] = []
-            for prev_line in reversed(current_lines):
-                w_cnt = len(prev_line.split())
-                if overlap_count + w_cnt <= overlap_words:
-                    overlap_lines.insert(0, prev_line)
-                    overlap_count += w_cnt
-                else:
-                    break
-
-            current_lines = overlap_lines
-            current_word_count = overlap_count
-            start_line = max(1, end_line - len(overlap_lines) + 1)
             chunk_idx += 1
+            if chunk_idx >= max_chunks_per_file:
+                break
+
+            overlap_line_count = min(len(current_lines), max(1, int(len(current_lines) * 0.2)))
+            current_lines = current_lines[-overlap_line_count:]
+            current_word_count = sum(len(l.split()) for l in current_lines)
+            start_line = max(1, line_idx - overlap_line_count + 1)
+
+    if current_lines and chunk_idx < max_chunks_per_file:
+        end_line = total_lines
+        chunk_text = f"Filename: {filepath.name}\nPath: {filepath.absolute()}\nLines {start_line}-{end_line}\n\nContent:\n" + "\n".join(current_lines)
+        chunks.append(
+            FileChunk(
+                chunk_id=f"{filepath.absolute()}#chunk_{chunk_idx}",
+                parent_filepath=str(filepath.absolute()),
+                filename=filepath.name,
+                text=chunk_text,
+                start_line=start_line,
+                end_line=end_line,
+                chunk_index=chunk_idx
+            )
+        )
 
     return chunks

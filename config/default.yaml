@@ -62,7 +62,7 @@ exclude_patterns:
 
 # Local AI Embedding model configuration
 embedding:
-  model_name: "all-MiniLM-L6-v2"
+  model_name: "BAAI/bge-small-en-v1.5"
   max_tokens: 512
   batch_size: 32
 
