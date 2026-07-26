@@ -68,7 +68,7 @@ class VectorStore:
         except Exception as e:
             logger.debug(f"delete error: {e}")
 
-    def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None, min_score_threshold: float = 0.28) -> list[SearchResult]:
+    def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None, min_score_threshold: float = 0.05) -> list[SearchResult]:
         """Refined & sharp search with Structured Operator Parsing, intent routing, and negative keyword filtering."""
         from semanticfs.query_parser import parse_structured_query
         from semanticfs.router import detect_query_intent
