@@ -418,6 +418,7 @@ def show_main_help_menu():
     table.add_row("sfind jump <query>", "Find target file & copy folder 'cd' command to clipboard")
     table.add_row("sfind duplicates", "Find duplicate files across your drive using vector similarity")
     table.add_row("sfind tag <file> <note>", "Attach custom notes or tags to any file for boosted search")
+    table.add_row("sfind model", "Launch interactive 3D movable neural model topology visualizer")
     table.add_row("sfind status", "Show background engine status & indexed files count")
     table.add_row("sfind recent", "Show 10 most recently modified files")
 
@@ -454,7 +455,11 @@ def main(
 
     lower_args = set(p.lower() for p in query_parts)
 
-    if "completion" in lower_args:
+    if "model" in lower_args or "visualize" in lower_args or "3d" in lower_args:
+        from semanticfs.visualizer import launch_visualizer
+        launch_visualizer()
+        return
+    elif "completion" in lower_args:
         show_completion()
         return
     elif "jump" in lower_args and len(query_parts) > 1:
