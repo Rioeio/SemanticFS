@@ -64,13 +64,14 @@ def open_path(filepath: str, open_with_code: bool = False):
         subprocess.run(["code", filepath], shell=True)
         return
 
-    console.print(f"\n[bold green]🚀 Launching File:[/bold green] [underline]{filepath}[/underline]")
+    console.print(f"\n[bold green]📁 Locating & Highlighting File in Explorer:[/bold green] [underline]{filepath}[/underline]")
     if os.name == 'nt':
-        os.startfile(filepath)
+        # /select,"filepath" opens Windows File Explorer at the folder location and highlights the file!
+        subprocess.run(f'explorer.exe /select,"{filepath}"', shell=True)
     elif sys.platform == 'darwin':
-        os.system(f"open '{filepath}'")
+        os.system(f"open -R '{filepath}'")
     else:
-        os.system(f"xdg-open '{filepath}'")
+        os.system(f"dbus-send --session --dest=org.freedesktop.FileManager1 --type=method_call /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:'file://{filepath}' string:''")
 
 def render_table(results, selected_index: int | None = None) -> Table:
     table = Table(title="✨ SemanticFS Neural Search Results", expand=True, border_style="cyan")
