@@ -40,8 +40,8 @@
 - **ONNX INT8 Model Quantization (`sfind onnx`)**: Export PyTorch model weights to quantized ONNX for 4X faster CPU inference.
 - **Virtual Drive Mount Engine (`sfind mount`)**: Initializes virtual search shortcut directory at `~/.semanticfs/virtual_drive` for Explorer integration.
 - **Native Rust Engine Architecture (`native_core/`)**: Standalone Rust core crate (`libsemanticfs`) for native C/Rust speed.
-- **Terminal Interface**: Interactive CLI menu with arrow-key navigation, live syntax-highlighted code preview box, `Enter` to open File Explorer and highlight the selected file, quick-pick keys (`1`-`5`), and VS Code integration (`--code`).
-- **Offline OCR Text Extraction Engine**: Integrated `semanticfs/ocr.py` (Tesseract / EasyOCR pipeline) extracts printed text inside scanned PDFs, receipts, invoices, code error screenshots, and images.
+- **3D Movable Neural Model Topology Visualizer (`sfind model`)**: Standalone 3D ASCII raycasting engine (`semanticfs/visualizer.py`) projects rotating 384-dimensional vector topology, CLIP vision patches, and AST syntax meshes with interactive WASD/Arrow controls and zoom.
+- **Virtual Smart Collections (`sfind collection`)**: Create virtual shortcut folders in File Explorer without moving a single physical file on disk (zero disk risk).
 - **Universal Format Extraction**: Parses code files, Markdown, TXT, PDF, Word (`.docx`), PowerPoint (`.pptx`), Excel (`.xlsx`), JSON, CSV, OCR text, and EXIF/CLIP metadata for media binaries (`.png`, `.jpg`, `.mp4`, `.mp3`).
 - **Git Commit Search**: Search git commit messages across all monitored repositories with `sfind commit <query>`.
 - **Privacy & Offline Isolation**: Operates completely offline with zero telemetry or cloud dependencies.
