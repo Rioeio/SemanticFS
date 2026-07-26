@@ -509,6 +509,61 @@ def main(
         else:
             console.print(f"[red]Failed to tag file:[/red] {t_path}")
         return
+    elif "collection" in lower_args or "collections" in lower_args:
+        print_banner()
+        from semanticfs.collections import CollectionManager
+        from semanticfs.config import Config
+        from semanticfs.store import VectorStore
+
+        cm = CollectionManager()
+        sub_args = [p for p in query_parts if p.lower() not in ("collection", "collections")]
+
+        if not sub_args or sub_args[0].lower() in ("list", "ls"):
+            cols = cm.list_collections()
+            if cols:
+                table = Table(title="📁 Virtual Smart Collections (Zero Real Files Touched)", border_style="cyan")
+                table.add_column("Collection Name", style="bold green")
+                table.add_column("Virtual Shortcuts", style="bold magenta", justify="center")
+                table.add_column("Semantic Query Rule", style="yellow")
+                for c in cols:
+                    table.add_row(c["name"], str(c["count"]), c["query"])
+                console.print(table)
+                console.print("\n[dim]Open in Windows Explorer: sfind mount[/dim]")
+            else:
+                console.print("[yellow]No virtual collections created yet.[/yellow]")
+                console.print("[dim]Create one with: sfind collection create \"Tax Receipts\" \"invoice ext:pdf\"[/dim]")
+            return
+
+        action = sub_args[0].lower()
+
+        if action == "create" and len(sub_args) > 2:
+            col_name = sub_args[1]
+            col_query = " ".join(sub_args[2:])
+            config = Config.get_instance()
+            store = VectorStore(config.storage.db_path, config.storage.collection_name)
+            
+            q_emb = query_daemon_embedding(col_query)
+            if q_emb is None:
+                from semanticfs.embedder import Embedder
+                embedder = Embedder(model, config.embedding.max_tokens)
+                q_emb = embedder.embed_text(col_query)
+                
+            results = store.search(q_emb, query_text=col_query, n_results=20)
+            fps = [r.filepath for r in results]
+            
+            if cm.create_collection(col_name, col_query, fps):
+                console.print(f"[bold green]✔ Created Virtual Collection:[/bold green] '{col_name}' ({len(fps)} virtual shortcuts)")
+                console.print(f"[dim]Your physical files on disk remain 100% untouched![/dim]")
+            return
+
+        elif action in ("delete", "rm") and len(sub_args) > 1:
+            col_name = sub_args[1]
+            if cm.delete_collection(col_name):
+                console.print(f"[bold red]✘ Deleted Virtual Collection:[/bold red] '{col_name}'")
+            else:
+                console.print(f"[yellow]Collection not found:[/yellow] '{col_name}'")
+            return
+
     elif "mount" in lower_args or "drive" in lower_args:
         print_banner()
         vdir = Path("~/.semanticfs/virtual_drive").expanduser()

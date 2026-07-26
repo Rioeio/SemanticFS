@@ -137,6 +137,8 @@ When navigating search results in the terminal (`sfind <query>`), press any of t
 | Command / Option | Description |
 |---|---|
 | `sfind <query>` | Natural language context search + interactive arrow menu & live code preview |
+| `sfind collection create` | Create Virtual Smart Collection shortcuts in Explorer (Zero real files moved on disk) |
+| `sfind collection list` | Display all active Virtual Smart Collections and their shortcut rules |
 | `sfind jump <query>` | Find target file & copy `cd /folder/path` command directly to clipboard |
 | `sfind duplicates` | Scan vector store to identify high-similarity duplicate files across drive |
 | `sfind tag <file> <note>` | Attach custom semantic notes and tags to any file for boosted search |
