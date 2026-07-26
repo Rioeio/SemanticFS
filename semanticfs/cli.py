@@ -25,7 +25,7 @@ def print_banner():
         "[bold cyan]     /     \\ [/bold cyan]    [bold bright_magenta]\\___ \\ / _ \\ '_ ` _ \\ / _` | '__| __| |/ __|  __|  \\___ \\ [/bold bright_magenta]",
         "[bold cyan]    (       )[/bold cyan]   [bold bright_magenta] ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |[/bold bright_magenta]",
         "[bold cyan]     `-----' [/bold cyan]   [bold bright_magenta]|_____/ \\___|_| |_| |_|\\__,_|_|   \\__|_|\\___|_|    |_____/[/bold bright_magenta]",
-        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Sub-5ms IPC[/bold yellow]  [bold bright_cyan]● v0.1.0[/bold bright_cyan]\n"
+        "                 [bold green]● Local Neural Engine[/bold green]  [bold yellow]● Sub-5ms IPC[/bold yellow]  [bold bright_cyan]● v0.1.0[/bold bright_cyan]\n"
     ]
     for line in banner:
         console.print(line, highlight=False)
@@ -408,32 +408,21 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
 
 def show_main_help_menu():
     print_banner()
-    table = Table(title="✨ SemanticFS CLI — Command Matrix", expand=True, border_style="bright_magenta")
-    table.add_column("Command Syntax", style="bold green", width=26)
-    table.add_column("Category", style="bold cyan", width=14)
-    table.add_column("Description", style="white")
+    console.print("💡 [bold bright_cyan]Quick Start:[/bold bright_cyan] Type [bold green]sfind <anything>[/bold green] to search your entire computer using natural language!\n")
 
-    table.add_row("sfind <query>", "Search", "Natural language context search + interactive menu & live preview")
-    table.add_row("sfind jump <query>", "Navigation", "Find file & copy 'cd /folder/path' command to clipboard")
-    table.add_row("sfind duplicates", "Audit", "Find duplicate files across drive via vector similarity")
-    table.add_row("sfind tag <file> <note>", "Annotation", "Attach custom semantic notes & tags to any file")
-    table.add_row("sfind start", "IPC Engine", "Launch pre-warmed daemon IPC server for sub-5ms search")
-    table.add_row("sfind stop", "IPC Engine", "Stop ambient background tracking daemon")
-    table.add_row("sfind stats / status", "Analytics", "Master system analytics: daemon status, 384D vectors, DB size")
-    table.add_row("sfind commit <query>", "Git Search", "Search git commit messages across all monitored repositories")
-    table.add_row("sfind train", "AI Engine", "Fine-tune AI model directly on your local file vocabulary")
-    table.add_row("sfind onnx", "Optimization", "Export PyTorch model weights to ONNX INT8 quantized format")
-    table.add_row("sfind mount", "Virtual Drive", "Initialize virtual search shortcut directory for Windows Explorer")
-    table.add_row("sfind reindex", "Indexing", "Force full file re-scan & dynamic vector re-indexing across all drives")
-    table.add_row("sfind completion", "Shell", "Generate PowerShell auto-completion script for $PROFILE")
-    table.add_row("sfind list-dirs", "Watch Paths", "List all currently monitored workspace directories")
-    table.add_row("sfind add-dir <path>", "Watch Paths", "Register a new directory folder to the watch list")
-    table.add_row("sfind recent", "Activity", "Display 10 most recently modified files")
-    table.add_row("sfind --type pdf", "Filter Flag", "Filter search results by extension (pdf, py, docx, jpeg)")
-    table.add_row("sfind --since 7d", "Filter Flag", "Filter search results by modification time (7d, 24h, 30m)")
-    table.add_row("sfind --code", "Integration", "Automatically open top search match directly in VS Code")
+    table = Table(title="✨ Essential Commands", expand=True, border_style="cyan")
+    table.add_column("Command Syntax", style="bold green", width=26)
+    table.add_column("Description & Action", style="white")
+
+    table.add_row("sfind <query>", "Search files using natural language (e.g. sfind physics notes ext:pdf)")
+    table.add_row("sfind jump <query>", "Find target file & copy folder 'cd' command to clipboard")
+    table.add_row("sfind duplicates", "Find duplicate files across your drive using vector similarity")
+    table.add_row("sfind tag <file> <note>", "Attach custom notes or tags to any file for boosted search")
+    table.add_row("sfind status", "Show background engine status & indexed files count")
+    table.add_row("sfind recent", "Show 10 most recently modified files")
 
     console.print(table)
+    console.print("\n[dim]Advanced Commands: sfind start | sfind stop | sfind reindex | sfind commit | sfind train | sfind onnx | sfind mount[/dim]\n")
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("query_parts", nargs=-1)
@@ -625,7 +614,8 @@ def main(
             results = [r for r in results if float(r.metadata.get("modified_at", 0)) >= min_ts]
 
     if not results:
-        console.print(f"[yellow]No results found for:[/yellow] '{query}'")
+        console.print(f"\n[bold yellow]🔍 No exact matches found for:[/bold yellow] '[bold cyan]{query}[/bold cyan]'")
+        console.print("[dim]💡 Tip: Try using broader words, removing strict filters (like ext: or in:), or run 'sfind reindex' to index new files.[/dim]\n")
         return
 
     if open_file or open_code:
