@@ -168,7 +168,7 @@ When navigating search results in the terminal (`sfind <query>`), press any of t
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │                       sfind CLI                             │
-│       (Interactive Rich Live Menu / Vector Search)           │
+│       (Interactive Rich Live Menu / Vector Search)          │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                ┌───────────────┴───────────────┐
@@ -181,8 +181,8 @@ When navigating search results in the terminal (`sfind <query>`), press any of t
                ▲                               ▲
                │                               │
 ┌──────────────┴───────────────────────────────┴──────────────┐
-│        Parallel 16-Worker Ambient File Watcher Daemon        │
-│         (Context Snapshot + Local File Event Tracker)        │
+│        Parallel 16-Worker Ambient File Watcher Daemon       │
+│         (Context Snapshot + Local File Event Tracker)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
