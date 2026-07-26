@@ -59,11 +59,26 @@ cd SemanticFS
 pip install -e .
 ```
 
-### How to Search Effectively
+### Structured Search Operators & Sharp Precision Engine
 
-SemanticFS supports natural language context queries as well as targeted filter flags:
+For pinpoint search precision, `SemanticFS` supports structured inline query operators:
+
+| Operator Syntax | Purpose & Example |
+|---|---|
+| `ext:pdf` / `ext:py` | Filter strictly by file extension (`sfind "neural network" ext:py`) |
+| `file:report` / `file:invoice` | Filter by matching filename sub-string (`sfind "budget summary" file:2026`) |
+| `in:documents` / `in:desktop` | Limit search scope to specific directory folder (`sfind notes in:documents`) |
+| `tag:note` | Search specifically inside custom user-added file notes (`sfind tag:final`) |
+| `+term` | Require that `term` MUST exist in the file (`sfind python +dataset`) |
+| `-term` | Disqualify & exclude any file containing `term` (`sfind AI research -draft`) |
+| `score:0.5` | Dynamically override the minimum relevance score threshold |
+
+### Search Examples
 
 ```bash
+# Structured search: Python files in Documents excluding draft files
+sfind "machine learning" ext:py in:documents -draft
+
 # Natural language context search (with interactive arrow keys & live preview)
 sfind python linear algebra matrix solver
 

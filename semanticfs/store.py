@@ -69,9 +69,15 @@ class VectorStore:
             logger.debug(f"delete error: {e}")
 
     def search(self, query_embedding: list[float], query_text: str = "", n_results: int = 20, filters: dict[str, Any] | None = None, min_score_threshold: float = 0.28) -> list[SearchResult]:
-        """Semantic search with intent category routing, chunk deduplication, & strict relevance thresholding."""
+        """Refined & sharp search with Structured Operator Parsing, intent routing, and negative keyword filtering."""
+        from semanticfs.query_parser import parse_structured_query
         from semanticfs.router import detect_query_intent
-        intent = detect_query_intent(query_text)
+
+        sq = parse_structured_query(query_text)
+        intent = detect_query_intent(sq.semantic_text)
+        
+        if sq.min_score is not None:
+            min_score_threshold = sq.min_score
         
         try:
             coll = self._get_collection()
@@ -85,7 +91,7 @@ class VectorStore:
             logger.error(f"search error: {e}")
             return []
         
-        query_words = [w.lower() for w in query_text.split() if len(w) > 2 and w.lower() not in STOPWORDS]
+        query_words = [w.lower() for w in sq.semantic_text.split() if len(w) > 2 and w.lower() not in STOPWORDS]
         grouped_results: dict[str, SearchResult] = {}
 
         if results and results['ids'] and results['ids'][0]:
@@ -98,17 +104,43 @@ class VectorStore:
                 if not filepath:
                     continue
 
+                filepath_lower = filepath.lower()
+                filename_lower = metadata.get("filename", "").lower()
+                filetype = metadata.get("filetype", "").lower()
+                snippet_lower = str(metadata.get("content_snippet", "")).lower()
+                full_text_search = f"{filepath_lower} {snippet_lower}"
+
+                # 1. Negative Exclusion Filter (-term)
+                if sq.must_exclude:
+                    if any(ex in full_text_search for ex in sq.must_exclude):
+                        continue
+
+                # 2. Must Include Filter (+term)
+                if sq.must_include:
+                    if not all(inc in full_text_search for inc in sq.must_include):
+                        continue
+
+                # 3. Extension Structured Filter (ext:pdf, ext:py)
+                if sq.extensions and filetype not in sq.extensions:
+                    continue
+
+                # 4. Filename Structured Filter (file:invoice)
+                if sq.filename_contains and not any(fn in filename_lower for fn in sq.filename_contains):
+                    continue
+
+                # 5. Folder Path Structured Filter (in:documents)
+                if sq.folder_contains and not any(folder in filepath_lower for folder in sq.folder_contains):
+                    continue
+
                 raw_vector_score = max(0.0, 1.0 - distance)
                 score = raw_vector_score
                 
-                filetype = metadata.get("filetype", "").lower()
-                filename_lower = metadata.get("filename", "").lower()
-                filepath_lower = filepath.lower()
-                
-                if intent.intent_category:
-                    if filetype in intent.target_exts:
+                # Category intent routing: boost matching filetypes
+                target_exts = sq.extensions if sq.extensions else intent.target_exts
+                if target_exts:
+                    if filetype in target_exts:
                         score += 0.50
-                    else:
+                    elif intent.intent_category:
                         score -= 0.35
 
                 if query_words:
