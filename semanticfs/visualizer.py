@@ -109,7 +109,7 @@ class NeuralModelVisualizer:
 
         return x * self.zoom, y * self.zoom, z * self.zoom
 
-    def render_bad_apple_frame(()) -> str:
+    def render_bad_apple_frame(self) -> str:
         """Render high-detail Bad Apple!! black-and-white silhouette visualizer."""
         sil_idx = (self.frame_tick // 4) % len(BAD_APPLE_SILHOUETTES)
         sil_lines = BAD_APPLE_SILHOUETTES[sil_idx]
