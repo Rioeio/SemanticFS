@@ -96,6 +96,9 @@ sfind stats
 | Command / Option | Description |
 |---|---|
 | `sfind <query>` | Natural language context search + interactive arrow menu & live code preview |
+| `sfind jump <query>` | Find target file & copy `cd /folder/path` command directly to clipboard |
+| `sfind duplicates` | Scan vector store to identify high-similarity duplicate files across drive |
+| `sfind tag <file> <note>` | Attach custom semantic notes and tags to any file for boosted search |
 | `sfind start` | Launch pre-warmed background IPC server & tracking daemon for sub-5ms search |
 | `sfind stop` | Stop ambient background daemon |
 | `sfind status` | Display service status and master vector analytics |

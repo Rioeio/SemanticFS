@@ -105,12 +105,11 @@ class VectorStore:
                 filename_lower = metadata.get("filename", "").lower()
                 filepath_lower = filepath.lower()
                 
-                # Category intent routing: boost matching filetypes, penalize mismatched categories
                 if intent.intent_category:
                     if filetype in intent.target_exts:
-                        score += 0.50  # Massive boost for matching media category!
+                        score += 0.50
                     else:
-                        score -= 0.35  # Penalty for non-matching filetypes (e.g. mp3 when asking for pictures!)
+                        score -= 0.35
 
                 if query_words:
                     for word in query_words:
@@ -119,7 +118,6 @@ class VectorStore:
                         elif word in filepath_lower:
                             score += 0.20
 
-                # Recency Weight Decay (+0.10 max for files modified in last 48 hours)
                 modified_at = float(metadata.get("modified_at", 0))
                 if modified_at > 0:
                     age_hours = (time.time() - modified_at) / 3600.0
@@ -129,7 +127,6 @@ class VectorStore:
 
                 score = min(1.0, max(0.0, score))
                 
-                # Filter out low relevance garbage
                 if score < min_score_threshold:
                     continue
 
@@ -154,6 +151,74 @@ class VectorStore:
         search_results.sort(key=lambda r: r.score, reverse=True)
         return search_results[:n_results]
 
+    def find_duplicates(self, similarity_threshold: float = 0.96) -> list[tuple[str, str, float]]:
+        """Find semantic duplicate files across drive based on vector similarity."""
+        try:
+            coll = self._get_collection()
+            data = coll.get(include=["embeddings", "metadatas"])
+            if not data or not data.get("ids") or not data.get("embeddings"):
+                return []
+                
+            ids = data["ids"]
+            metadatas = data["metadatas"]
+            embeddings = data["embeddings"]
+            
+            import numpy as np
+            vecs = np.array(embeddings)
+            norms = np.linalg.norm(vecs, axis=1, keepdims=True)
+            norms[norms == 0] = 1.0
+            norm_vecs = vecs / norms
+            
+            sim_matrix = np.dot(norm_vecs, norm_vecs.T)
+            
+            duplicates = []
+            seen_pairs = set()
+            
+            for i in range(len(ids)):
+                for j in range(i + 1, len(ids)):
+                    sim = float(sim_matrix[i, j])
+                    path1 = metadatas[i].get("filepath", "")
+                    path2 = metadatas[j].get("filepath", "")
+                    if sim >= similarity_threshold and path1 != path2 and path1 and path2:
+                        pair_key = tuple(sorted([path1, path2]))
+                        if pair_key not in seen_pairs:
+                            seen_pairs.add(pair_key)
+                            duplicates.append((path1, path2, sim))
+                            
+            duplicates.sort(key=lambda x: x[2], reverse=True)
+            return duplicates[:20]
+        except Exception as e:
+            logger.debug(f"find_duplicates error: {e}")
+            return []
+
+    def add_file_tag(self, target_filepath: Path, tag_note: str) -> bool:
+        """Attach custom semantic tags and notes to a file's vector metadata."""
+        try:
+            parent_id = VectorStore.generate_id(target_filepath)
+            
+            from semanticfs.embedder import Embedder
+            from semanticfs.config import Config
+            config = Config.get_instance()
+            embedder = Embedder(config.embedding.model_name, config.embedding.max_tokens)
+            
+            tag_text = f"Filename: {target_filepath.name} Path: {target_filepath.absolute()} Custom Note Tag: {tag_note}"
+            emb = embedder.embed_text(tag_text)
+            
+            metadata = {
+                "filename": target_filepath.name,
+                "filepath": str(target_filepath.absolute()),
+                "filetype": target_filepath.suffix.lower(),
+                "custom_tag": tag_note,
+                "modified_at": time.time(),
+                "content_snippet": f"🏷️ Custom Tag: {tag_note}"
+            }
+            
+            self.upsert(f"{parent_id}#tag", emb, metadata)
+            return True
+        except Exception as e:
+            logger.debug(f"add_file_tag error: {e}")
+            return False
+
     def get(self, file_id: str) -> dict[str, Any] | None:
         """Get single file metadata."""
         try:
@@ -173,20 +238,6 @@ class VectorStore:
             return results['metadatas'] if results and results['metadatas'] else []
         except Exception as e:
             logger.debug(f"get_all error: {e}")
-            return []
-
-    def get_all_with_ids(self, limit: int = 1000) -> list[tuple[str, dict[str, Any]]]:
-        """Get multiple files with their IDs."""
-        try:
-            coll = self._get_collection()
-            results = coll.get(limit=limit)
-            items = []
-            if results and results['ids'] and results['metadatas']:
-                for i in range(len(results['ids'])):
-                    items.append((results['ids'][i], results['metadatas'][i]))
-            return items
-        except Exception as e:
-            logger.debug(f"get_all_with_ids error: {e}")
             return []
 
     def clear(self) -> None:

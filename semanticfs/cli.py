@@ -25,10 +25,18 @@ def print_banner():
         "[bold cyan]     /     \\ [/bold cyan]    [bold bright_magenta]\\___ \\ / _ \\ '_ ` _ \\ / _` | '__| __| |/ __|  __|  \\___ \\ [/bold bright_magenta]",
         "[bold cyan]    (       )[/bold cyan]   [bold bright_magenta] ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |[/bold bright_magenta]",
         "[bold cyan]     `-----' [/bold cyan]   [bold bright_magenta]|_____/ \\___|_| |_| |_|\\__,_|_|   \\__|_|\\___|_|    |_____/[/bold bright_magenta]",
-        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Ultra-Snappy Sub-5ms IPC[/bold yellow]  [bold bright_cyan]● v0.1.0[/bold bright_cyan]\n"
+        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Sub-5ms IPC[/bold yellow]  [bold bright_cyan]● v0.1.0[/bold bright_cyan]\n"
     ]
     for line in banner:
         console.print(line, highlight=False)
+
+def copy_to_clipboard(text: str) -> bool:
+    """Copies text directly to Windows Clipboard."""
+    try:
+        subprocess.run('clip.exe', input=text.encode('utf-16'), check=True, shell=True)
+        return True
+    except Exception:
+        return False
 
 def print_score_bar(score: float) -> str:
     filled = int(score * 10)
@@ -58,6 +66,16 @@ def get_dir_size_mb(path: Path) -> float:
         pass
     return round(total / (1024 * 1024), 2)
 
+def open_path_in_app(filepath: str):
+    """Launches file directly in associated Windows application."""
+    console.print(f"\n[bold green]🚀 Launching File in App:[/bold green] [underline]{filepath}[/underline]")
+    if os.name == 'nt':
+        os.startfile(filepath)
+    elif sys.platform == 'darwin':
+        os.system(f"open '{filepath}'")
+    else:
+        os.system(f"xdg-open '{filepath}'")
+
 def open_path(filepath: str, open_with_code: bool = False):
     if open_with_code:
         console.print(f"\n[bold blue]💻 Opening in VS Code:[/bold blue] [underline]{filepath}[/underline]")
@@ -66,7 +84,6 @@ def open_path(filepath: str, open_with_code: bool = False):
 
     console.print(f"\n[bold green]📁 Locating & Highlighting File in Explorer:[/bold green] [underline]{filepath}[/underline]")
     if os.name == 'nt':
-        # /select,"filepath" opens Windows File Explorer at the folder location and highlights the file!
         subprocess.run(f'explorer.exe /select,"{filepath}"', shell=True)
     elif sys.platform == 'darwin':
         os.system(f"open -R '{filepath}'")
@@ -144,7 +161,7 @@ def render_table_with_preview(results, selected_index: int) -> Group:
     return Group(table, preview_panel)
 
 def interactive_select(results, query: str, open_with_code: bool = False) -> None:
-    """Interactive arrow-key menu with live code preview box."""
+    """Interactive menu with Explorer highlight [e], App Launch [o], VS Code [c], and Clipboard Copy [y/p]."""
     if not results or not sys.stdin.isatty():
         return
 
@@ -157,24 +174,40 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
     if os.name == 'nt':
         import msvcrt
         
-        console.print("\n[bold bright_cyan]⌨️ Navigation Shortcuts:[/bold bright_cyan] [bold green][↑/↓ Arrow Keys][/bold green] Select  [bold green][Enter][/bold green] Open  [bold blue][c][/bold blue] VS Code  [bold yellow][1-5][/bold yellow] Quick Pick  [bold red][q/Esc][/bold red] Quit\n")
+        console.print("\n[bold bright_cyan]⌨️ Action Shortcuts:[/bold bright_cyan] [bold green][Enter/e][/bold green] Explorer Highlight  [bold magenta][o][/bold magenta] Launch App  [bold blue][c][/bold blue] VS Code  [bold yellow][y][/bold yellow] Copy Path  [bold yellow][p][/bold yellow] Copy Snippet  [bold red][q/Esc][/bold red] Quit\n")
         
         with Live(render_table_with_preview(results, selected_index), console=console, refresh_per_second=10) as live:
             while True:
                 key = msvcrt.getch()
-                if key in (b'\r', b'\n'):  # Enter
+                if key in (b'\r', b'\n', b'e', b'E'):  # Enter / e -> Open Explorer Highlight
                     live.stop()
-                    open_path(results[selected_index].filepath, open_with_code)
+                    open_path(results[selected_index].filepath, open_with_code=False)
                     return
-                elif key in (b'c', b'C'):  # Open in VS Code
+                elif key in (b'o', b'O'):  # o -> Launch in App
+                    live.stop()
+                    open_path_in_app(results[selected_index].filepath)
+                    return
+                elif key in (b'c', b'C'):  # c -> VS Code
                     live.stop()
                     open_path(results[selected_index].filepath, open_with_code=True)
+                    return
+                elif key in (b'y', b'Y'):  # y -> Copy Path
+                    fp = results[selected_index].filepath
+                    if copy_to_clipboard(fp):
+                        live.stop()
+                        console.print(f"\n[bold green]📋 Copied File Path to Clipboard:[/bold green] {fp}")
+                    return
+                elif key in (b'p', b'P'):  # p -> Copy Snippet
+                    snip = str(results[selected_index].metadata.get("content_snippet", ""))
+                    if copy_to_clipboard(snip):
+                        live.stop()
+                        console.print(f"\n[bold green]📋 Copied Match Snippet to Clipboard![/bold green]")
                     return
                 elif key in (b'\x1b', b'q', b'Q'):  # Quit
                     live.stop()
                     console.print("[dim]Exited selection.[/dim]")
                     return
-                elif key.isdigit():  # Quick select by number
+                elif key.isdigit():  # Quick select
                     idx = int(key.decode('ascii')) - 1
                     if 0 <= idx < total:
                         selected_index = idx
@@ -327,7 +360,7 @@ def show_completion():
 function sf { sfind $args }
 Register-ArgumentCompleter -Native -CommandName sfind -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    $subcommands = @('start', 'stop', 'status', 'stats', 'train', 'reindex', 'recent', 'list-dirs', 'add-dir', 'commit', 'completion', 'onnx', 'mount', '--clear', '--code', '--since')
+    $subcommands = @('start', 'stop', 'status', 'stats', 'train', 'reindex', 'recent', 'list-dirs', 'add-dir', 'commit', 'completion', 'onnx', 'mount', 'jump', 'duplicates', 'tag', '--clear', '--code', '--since')
     $subcommands | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
@@ -381,6 +414,9 @@ def show_main_help_menu():
     table.add_column("Description", style="white")
 
     table.add_row("sfind <query>", "Search", "Natural language context search + interactive menu & live preview")
+    table.add_row("sfind jump <query>", "Navigation", "Find file & copy 'cd /folder/path' command to clipboard")
+    table.add_row("sfind duplicates", "Audit", "Find duplicate files across drive via vector similarity")
+    table.add_row("sfind tag <file> <note>", "Annotation", "Attach custom semantic notes & tags to any file")
     table.add_row("sfind start", "IPC Engine", "Launch pre-warmed daemon IPC server for sub-5ms search")
     table.add_row("sfind stop", "IPC Engine", "Stop ambient background tracking daemon")
     table.add_row("sfind stats / status", "Analytics", "Master system analytics: daemon status, 384D vectors, DB size")
@@ -431,6 +467,58 @@ def main(
 
     if "completion" in lower_args:
         show_completion()
+        return
+    elif "jump" in lower_args and len(query_parts) > 1:
+        print_banner()
+        from semanticfs.config import Config
+        from semanticfs.store import VectorStore
+        config = Config.get_instance()
+        store = VectorStore(config.storage.db_path, config.storage.collection_name)
+        q = " ".join(query_parts[1:])
+        q_emb = query_daemon_embedding(q)
+        if q_emb is None:
+            from semanticfs.embedder import Embedder
+            embedder = Embedder(model, config.embedding.max_tokens)
+            q_emb = embedder.embed_text(q)
+        results = store.search(q_emb, query_text=q, n_results=1)
+        if results:
+            parent_folder = str(Path(results[0].filepath).parent)
+            copy_to_clipboard(f'cd "{parent_folder}"')
+            console.print(f"[bold green]✔ Parent Folder Path:[/bold green] {parent_folder}")
+            console.print(f"[bold yellow]Copied cd command to clipboard![/bold yellow] Paste into terminal with Ctrl+V.")
+        else:
+            console.print(f"[yellow]No match found to jump for:[/yellow] '{q}'")
+        return
+    elif "duplicates" in lower_args or "dups" in lower_args:
+        print_banner()
+        from semanticfs.config import Config
+        from semanticfs.store import VectorStore
+        config = Config.get_instance()
+        store = VectorStore(config.storage.db_path, config.storage.collection_name)
+        dups = store.find_duplicates()
+        if dups:
+            table = Table(title="👯 Semantic Duplicate Files Discovered", border_style="bright_magenta")
+            table.add_column("Similarity", style="bold green", justify="center")
+            table.add_column("File 1 Path", style="cyan")
+            table.add_column("File 2 Path", style="yellow")
+            for f1, f2, sim in dups:
+                table.add_row(f"{int(sim*100)}%", f1, f2)
+            console.print(table)
+        else:
+            console.print("[green]✔ No high-similarity duplicate files found.[/green]")
+        return
+    elif "tag" in lower_args and len(query_parts) > 2:
+        print_banner()
+        from semanticfs.config import Config
+        from semanticfs.store import VectorStore
+        config = Config.get_instance()
+        store = VectorStore(config.storage.db_path, config.storage.collection_name)
+        t_path = Path(query_parts[1]).resolve()
+        note = " ".join(query_parts[2:])
+        if store.add_file_tag(t_path, note):
+            console.print(f"[bold green]✔ Added Semantic Tag to {t_path.name}:[/bold green] '{note}'")
+        else:
+            console.print(f"[red]Failed to tag file:[/red] {t_path}")
         return
     elif "mount" in lower_args or "drive" in lower_args:
         print_banner()
