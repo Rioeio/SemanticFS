@@ -10,7 +10,7 @@ from semanticfs.chunker import FileChunk, chunk_file_content
 logger = logging.getLogger(__name__)
 
 class Embedder:
-    """Embeds text and files into vectors, with support for local fine-tuned models, rich PPTX/XLSX extraction, and dynamic semantic chunking."""
+    """Embeds text and files into vectors, with support for local fine-tuned models, rich PPTX/XLSX extraction, OCR, and dynamic semantic chunking."""
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", max_tokens: int = 512):
         self.model_name = model_name
         self.max_tokens = max_tokens
@@ -50,7 +50,7 @@ class Embedder:
         return chunk_file_content(filepath, content)
 
     def _extract_content(self, filepath: Path) -> str:
-        """Extract text from text, code, document, slides, tabular, or binary files gracefully."""
+        """Extract text from text, code, document, slides, tabular, media, or OCR scanned files gracefully."""
         ext = filepath.suffix.lower()
         content = ""
         try:
@@ -60,6 +60,14 @@ class Embedder:
                 for page in doc:
                     content += page.get_text() + "\n"
                 doc.close()
+                
+                # Run OCR on scanned PDF if extracted text is empty
+                if len(content.strip()) < 10:
+                    from semanticfs.ocr import extract_ocr_text
+                    ocr_res = extract_ocr_text(filepath)
+                    if ocr_res:
+                        content += f"\nOCR Extracted Text:\n{ocr_res}"
+
             elif ext == ".docx":
                 import docx
                 doc = docx.Document(filepath)
@@ -90,7 +98,7 @@ class Embedder:
                         row_vals = [str(val) for val in row if val is not None]
                         if row_vals:
                             lines.append(" | ".join(row_vals))
-                    sheet_texts.append("\n".join(lines[:100]))  # Cap at 100 rows per sheet for speed
+                    sheet_texts.append("\n".join(lines[:100]))
                 content = "\n\n".join(sheet_texts)
             elif ext in (".csv", ".tsv"):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -103,7 +111,13 @@ class Embedder:
                     content = f.read(10000)
             elif ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"):
                 from semanticfs.vision import extract_image_visual_metadata
-                content = extract_image_visual_metadata(filepath)
+                from semanticfs.ocr import extract_ocr_text
+                visual_meta = extract_image_visual_metadata(filepath)
+                ocr_text = extract_ocr_text(filepath)
+                if ocr_text:
+                    content = f"{visual_meta}\nOCR Printed Text: {ocr_text}"
+                else:
+                    content = visual_meta
             else:
                 stat = filepath.stat() if filepath.exists() else None
                 size_kb = round(stat.st_size / 1024, 1) if stat else 0
