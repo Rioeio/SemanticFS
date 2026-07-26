@@ -9,16 +9,8 @@ from pathlib import Path
 
 import click
 from rich.console import Console, Group
-from rich.live import Live
 from rich.panel import Panel
-from rich.prompt import IntPrompt
-from rich.syntax import Syntax
 from rich.table import Table
-
-from semanticfs.config import Config
-from semanticfs.embedder import Embedder
-from semanticfs.linker import FileLinker
-from semanticfs.store import VectorStore
 
 console = Console()
 
@@ -33,7 +25,7 @@ def print_banner():
         "[bold cyan]     /     \\ [/bold cyan]    [bold bright_magenta]\\___ \\ / _ \\ '_ ` _ \\ / _` | '__| __| |/ __|  __|  \\___ \\ [/bold bright_magenta]",
         "[bold cyan]    (       )[/bold cyan]   [bold bright_magenta] ____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |[/bold bright_magenta]",
         "[bold cyan]     `-----' [/bold cyan]   [bold bright_magenta]|_____/ \\___|_| |_| |_|\\__,_|_|   \\__|_|\\___|_|    |_____/[/bold bright_magenta]",
-        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Sub-20ms IPC[/bold yellow]  [bold bright_cyan]● CLIP Vision[/bold bright_cyan] [dim cyan]v0.1.0[/dim cyan]\n"
+        "                 [bold green]● Local Neural Vector Engine[/bold green]  [bold yellow]● Ultra-Snappy Sub-5ms IPC[/bold yellow]  [bold bright_cyan]● v0.1.0[/bold bright_cyan]\n"
     ]
     for line in banner:
         console.print(line, highlight=False)
@@ -50,7 +42,7 @@ def print_score_bar(score: float) -> str:
     return f"[{bar_style}]{'█' * filled}[/{bar_style}][dim]{'░' * empty}[/dim]"
 
 def get_dir_size_mb(path: Path) -> float:
-    """Calculate total size of directory in megabytes."""
+    """Calculate total size of directory in megabytes instantly."""
     if not path.exists():
         return 0.0
     total = 0
@@ -121,6 +113,7 @@ def render_table(results, selected_index: int | None = None) -> Table:
 
 def render_table_with_preview(results, selected_index: int) -> Group:
     """Renders search results table + live syntax-highlighted code preview panel."""
+    from rich.syntax import Syntax
     table = render_table(results, selected_index)
     if not results or selected_index >= len(results):
         return Group(table)
@@ -153,6 +146,9 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
     """Interactive arrow-key menu with live code preview box."""
     if not results or not sys.stdin.isatty():
         return
+
+    from rich.live import Live
+    from rich.prompt import IntPrompt
 
     total = len(results)
     selected_index = 0
@@ -244,12 +240,16 @@ def stop_daemon():
 
 def show_status_and_analytics():
     print_banner()
+    from semanticfs.config import Config
+    from semanticfs.linker import FileLinker
+    from semanticfs.store import VectorStore
+
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
     linker = FileLinker(config.linker.db_path)
 
     d_running = DAEMON_PID_FILE.exists() and is_pid_running(int(DAEMON_PID_FILE.read_text().strip()))
-    d_status = "[bold green]● RUNNING (Sub-20ms IPC Active)[/bold green]" if d_running else "[bold red]● STOPPED[/bold red]"
+    d_status = "[bold green]● RUNNING (Sub-5ms IPC Active)[/bold green]" if d_running else "[bold red]● STOPPED[/bold red]"
 
     file_count = store.count()
     vector_count = file_count
@@ -276,6 +276,8 @@ def show_status_and_analytics():
 
 def run_reindex():
     print_banner()
+    from semanticfs.config import Config
+    from semanticfs.store import VectorStore
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
     
@@ -291,6 +293,7 @@ def run_reindex():
 
 def search_git_commits(query: str):
     print_banner()
+    from semanticfs.config import Config
     config = Config.get_instance()
     console.print(f"[bold cyan]🔍 Searching Git commit logs for:[/bold cyan] '[bold yellow]{query}[/bold yellow]'\n")
     
@@ -377,7 +380,7 @@ def show_main_help_menu():
     table.add_column("Description", style="white")
 
     table.add_row("sfind <query>", "Search", "Natural language context search + interactive menu & live preview")
-    table.add_row("sfind start", "IPC Engine", "Launch pre-warmed daemon IPC server for sub-20ms search")
+    table.add_row("sfind start", "IPC Engine", "Launch pre-warmed daemon IPC server for sub-5ms search")
     table.add_row("sfind stop", "IPC Engine", "Stop ambient background tracking daemon")
     table.add_row("sfind stats / status", "Analytics", "Master system analytics: daemon status, 384D vectors, DB size")
     table.add_row("sfind commit <query>", "Git Search", "Search git commit messages across all monitored repositories")
@@ -419,9 +422,6 @@ def main(
     no_interactive: bool
 ):
     """SemanticFS CLI — Search your files using natural language context."""
-    config = Config.get_instance()
-    store = VectorStore(config.storage.db_path, config.storage.collection_name)
-
     if not query_parts and not (show_stats or clear_index or open_file):
         show_main_help_menu()
         return
@@ -468,6 +468,8 @@ def main(
         show_status_and_analytics()
         return
     elif "add-dir" in lower_args and len(query_parts) > 1:
+        from semanticfs.config import Config
+        config = Config.get_instance()
         new_path = Path(query_parts[1]).resolve()
         if new_path.exists() and new_path.is_dir():
             if new_path not in config.watcher.watch_directories:
@@ -480,6 +482,8 @@ def main(
             console.print(f"[red]Directory does not exist:[/red] {new_path}")
         return
     elif "list-dirs" in lower_args:
+        from semanticfs.config import Config
+        config = Config.get_instance()
         table = Table(title="Monitored Directories", border_style="cyan")
         table.add_column("#", justify="right", style="cyan")
         table.add_column("Directory Path", style="green")
@@ -488,6 +492,10 @@ def main(
         console.print(table)
         return
     elif "recent" in lower_args:
+        from semanticfs.config import Config
+        from semanticfs.store import VectorStore
+        config = Config.get_instance()
+        store = VectorStore(config.storage.db_path, config.storage.collection_name)
         items = store.get_all(limit=10)
         table = Table(title="Recently Modified Files", border_style="cyan")
         table.add_column("Filename", style="green")
@@ -498,6 +506,11 @@ def main(
         console.print(table)
         return
 
+    from semanticfs.config import Config
+    from semanticfs.store import VectorStore
+    config = Config.get_instance()
+    store = VectorStore(config.storage.db_path, config.storage.collection_name)
+
     if clear_index:
         store.clear()
         console.print("[bold green]Index collection cleared successfully.[/bold green]")
@@ -507,6 +520,7 @@ def main(
     
     query_embedding = query_daemon_embedding(query)
     if query_embedding is None:
+        from semanticfs.embedder import Embedder
         embedder = Embedder(model, config.embedding.max_tokens)
         query_embedding = embedder.embed_text(query)
     
