@@ -67,6 +67,15 @@ SemanticFS supports natural language context queries as well as targeted filter 
 # Natural language context search (with interactive arrow keys & live preview)
 sfind python linear algebra matrix solver
 
+# Find target file & copy 'cd /folder/path' command directly to clipboard
+sfind jump "physics assignment"
+
+# Find semantic duplicate files across drive via vector similarity
+sfind duplicates
+
+# Attach custom semantic notes and tags to any file
+sfind tag resume.pdf "final submitted job application 2026"
+
 # Multimodal visual scene search for images across Pictures/Downloads
 sfind beach sunset vacation
 
@@ -88,6 +97,22 @@ sfind main application entrypoint --code
 # Display system analytics and vector database stats
 sfind stats
 ```
+
+---
+
+## Interactive Terminal Menu Action Shortcuts
+
+When navigating search results in the terminal (`sfind <query>`), press any of the following action keys:
+
+| Shortcut Key | Action Performed |
+|---|---|
+| `Enter` or `e` | Open Windows File Explorer and highlight the selected file |
+| `o` | Launch file directly in its default application (Word, PDF reader, Photos) |
+| `c` | Open file directly in VS Code |
+| `y` | Copy absolute file path directly to Windows Clipboard |
+| `p` | Copy matching text snippet directly to Windows Clipboard |
+| `1` - `5` | Quick-pick rank number 1 through 5 |
+| `q` / `Esc` | Quit interactive selection menu |
 
 ---
 
