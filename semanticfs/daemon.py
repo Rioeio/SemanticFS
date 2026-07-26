@@ -8,6 +8,7 @@ import socket
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import click
@@ -56,7 +57,7 @@ class DaemonContext:
 
         def handle_client(conn):
             try:
-                conn.settimeout(1.0)
+                conn.settimeout(2.5)
                 data = conn.recv(8192).decode("utf-8")
                 if data:
                     req = json.loads(data)
@@ -132,28 +133,27 @@ class DaemonContext:
             self.store.delete(parent_id)
 
     def initial_scan(self) -> None:
-        logger.info("Starting initial directory scan with dynamic semantic chunking...")
-        ignored_names = {'node_modules', '.git', 'venv', '__pycache__', 'dist', 'build', '.vscode', '.gemini', '.antigravity', 'AppData'}
+        logger.info("Starting multi-threaded high-throughput directory scan with dynamic semantic chunking...")
+        ignored_names = {'node_modules', '.git', 'venv', '__pycache__', 'dist', 'build', '.vscode', '.gemini', '.antigravity', 'AppData', 'Temp', 'LocalSettings'}
         
-        indexed_count = 0
+        file_queue: list[Path] = []
         for watch_dir in self.config.watcher.watch_directories:
             if not watch_dir.exists():
                 logger.warning(f"Watch directory does not exist: {watch_dir}")
                 continue
                 
-            logger.info(f"Scanning directory: {watch_dir}")
+            logger.info(f"Collecting files from directory tree: {watch_dir}")
             for root, dirs, files in os.walk(watch_dir):
                 dirs[:] = [dr for dr in dirs if not dr.startswith('.') and dr not in ignored_names]
-                
                 for file in files:
-                    if file.startswith('.'):
-                        continue
-                    filepath = Path(root) / file
-                    if filepath.is_file():
-                        self.index_file(filepath)
-                        indexed_count += 1
+                    if not file.startswith('.'):
+                        file_queue.append(Path(root) / file)
 
-        logger.info(f"Initial scan complete. {indexed_count} files dynamically chunked and indexed.")
+        logger.info(f"Dispatched {len(file_queue):,} files to 16-worker thread pool for parallel indexing...")
+        with ThreadPoolExecutor(max_workers=16) as executor:
+            list(executor.map(self.index_file, file_queue))
+
+        logger.info(f"Initial scan complete. {len(file_queue):,} files dynamically chunked and indexed.")
 
     def run(self) -> None:
         logger.info("SemanticFS Daemon initializing...")

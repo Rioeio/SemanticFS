@@ -2,14 +2,7 @@
 
 # Directories to watch for user files
 watch_directories:
-  - "C:\\Users\\Manoj\\OneDrive\\Documents"
-  - "C:\\Users\\Manoj\\Documents"
-  - "C:\\Users\\Manoj\\Desktop"
-  - "C:\\Users\\Manoj\\Downloads"
-  - "C:\\Users\\Manoj\\Pictures"
-  - "C:\\Users\\Manoj\\Videos"
-  - "C:\\Users\\Manoj\\Music"
-  - "C:\\Dev"
+  - "C:\\Users\\Manoj"
 
 # File types to index
 include_patterns:
@@ -64,6 +57,8 @@ exclude_patterns:
   - "**/build/**"
   - "**/.semanticfs/**"
   - "**/target/**"
+  - "**/Temp/**"
+  - "**/LocalSettings/**"
 
 # Local AI Embedding model configuration
 embedding:
@@ -89,7 +84,7 @@ context:
 watcher:
   debounce_ms: 500
   initial_scan: true
-  max_file_size_mb: 25
+  max_file_size_mb: 50
 
 # Server settings
 server:
