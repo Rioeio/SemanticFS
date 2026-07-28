@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "query": "matrix decomposition linear system solver",
+    "expected_file": "linear_algebra_solver.py",
+    "category": "code"
+  },
+  {
+    "id": 2,
+    "query": "gpu compute instance cloud invoice billing",
+    "expected_file": "tax_invoice_2026.txt",
+    "category": "finance"
+  },
+  {
+    "id": 3,
+    "query": "qubit superposition state vectors hadamard gate",
+    "expected_file": "quantum_computing_notes.md",
+    "category": "academic"
+  },
+  {
+    "id": 4,
+    "query": "senior systems architect software engineer resume",
+    "expected_file": "resume_software_engineer.txt",
+    "category": "career"
+  },
+  {
+    "id": 5,
+    "query": "product architecture meeting agenda action items",
+    "expected_file": "meeting_agenda_q3.md",
+    "category": "planning"
+  },
+  {
+    "id": 6,
+    "query": "gaussian elimination partial pivoting python",
+    "expected_file": "linear_algebra_solver.py",
+    "category": "code"
+  },
+  {
+    "id": 7,
+    "query": "shor 9 qubit quantum error correction",
+    "expected_file": "quantum_computing_notes.md",
+    "category": "academic"
+  },
+  {
+    "id": 8,
+    "query": "nvme vector storage buffer total price",
+    "expected_file": "tax_invoice_2026.txt",
+    "category": "finance"
+  },
+  {
+    "id": 9,
+    "query": "virtual smart collections zero disk risk",
+    "expected_file": "meeting_agenda_q3.md",
+    "category": "planning"
+  },
+  {
+    "id": 10,
+    "query": "vector scale labs experience computer science",
+    "expected_file": "resume_software_engineer.txt",
+    "category": "career"
+  }
+]

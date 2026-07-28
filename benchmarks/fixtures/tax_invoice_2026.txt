@@ -1,0 +1,17 @@
+INVOICE #INV-2026-8849
+Date: 2026-03-15
+Vendor: CloudScale Infrastructure Services Inc.
+Billing Address: 100 Tech Enterprise Way, San Francisco, CA
+
+Itemized Description:
+--------------------------------------------------------------------------------
+1. GPU Compute Node Instance (8x A100 80GB) - 120 Hours         $1,440.00
+2. High-Throughput NVMe Vector Storage Buffer (5TB)             $ 250.00
+3. Distributed Background Queue Processing Load Balancer        $  95.00
+--------------------------------------------------------------------------------
+Subtotal:                                                        $1,785.00
+Tax (8.25%):                                                     $  147.26
+Total Due:                                                       $1,932.26
+
+Payment Status: PAID via Credit Card Ending in 4920
+Thank you for your business!

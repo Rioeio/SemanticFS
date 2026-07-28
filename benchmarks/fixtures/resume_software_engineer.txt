@@ -1,0 +1,20 @@
+ALEX R. MORGAN
+Senior Systems Architect & Machine Learning Engineer
+Email: alex.morgan@example.com | GitHub: github.com/alexmorgan-dev
+
+PROFESSIONAL SUMMARY
+Passionate software engineer with 7+ years of experience designing low-latency vector search databases, distributed background processing pipelines, and high-performance C++/Rust neural runtimes.
+
+TECHNICAL SKILLS
+- Languages: Python, C++, Rust, TypeScript, SQL, Go
+- Machine Learning: PyTorch, ONNX Runtime, HuggingFace Transformers, SentenceTransformers
+- Databases & Vector Search: ChromaDB, FAISS, SQLite, Redis, PostgreSQL
+- Systems: Multithreading, IPC Sockets, Asynchronous I/O, WebSockets
+
+EXPERIENCE
+Lead Systems Engineer | VectorScale Labs (2023 - Present)
+- Architected sub-10ms neural search daemon serving over 100,000 vector similarity queries daily.
+- Implemented AST code syntax chunkers and INT8 ONNX model quantization reducing RAM usage by 65%.
+
+EDUCATION
+B.S. in Computer Science & Applied Mathematics | University of Technology (2015 - 2019)
