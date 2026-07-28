@@ -26,6 +26,22 @@
 
 ---
 
+## System Requirements & Operating System Support
+
+| Resource / System | Requirement Specification |
+|---|---|
+| **Operating System** | **Windows** (Primary; full support for Explorer file highlighting `/select` & Clipboard), Linux/macOS (Supported) |
+| **Python Runtime** | **Python 3.11** or newer |
+| **System Memory (RAM)** | ~500 MB RAM (BAAI/bge-small-en-v1.5 model + ChromaDB vector index) |
+| **Disk Space** | ~134 MB (Embedding model weights) + ~150 MB per 10,000 indexed file chunks |
+| **OCR System Binary** | Tesseract OCR (Optional; required only for scanned PDF/image text extraction) |
+| **Rust Toolchain** | Cargo / rustc (Optional; required only for standalone `native_core` compilation) |
+
+> [!TIP]
+> Run `sfind doctor` anytime to perform an automated environment diagnostic check of all python dependencies, system binaries, and storage path permissions!
+
+---
+
 ## Core Product Features (Stable & Benchmarked)
 
 - **Local Neural Vector Search (`BAAI/bge-small-en-v1.5`)**: Powered by `BAAI/bge-small-en-v1.5` (a compact, high-throughput 384-dimensional embedding model optimized for local offline vector search) and embedded `ChromaDB`.

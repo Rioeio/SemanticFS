@@ -429,6 +429,7 @@ def show_main_help_menu():
     daemon_table.add_row("sfind start", "Launch pre-warmed background IPC server & tracking daemon for sub-5ms search")
     daemon_table.add_row("sfind stop", "Stop ambient background daemon")
     daemon_table.add_row("sfind status", "Display background daemon status & master index analytics")
+    daemon_table.add_row("sfind doctor", "Run environment diagnostics & check system dependencies")
     daemon_table.add_row("sfind reindex", "Force full re-scan & vector re-indexing across all workspace directories")
     daemon_table.add_row("sfind add-dir <path>", "Register a new workspace directory for background indexing")
     daemon_table.add_row("sfind list-dirs", "List all registered workspace directories")
@@ -476,7 +477,11 @@ def main(
 
     lower_args = set(p.lower() for p in query_parts)
 
-    if "model" in lower_args or "visualize" in lower_args or "3d" in lower_args:
+    if "doctor" in lower_args or "health" in lower_args:
+        from semanticfs.doctor import run_environment_doctor
+        run_environment_doctor()
+        return
+    elif "model" in lower_args or "visualize" in lower_args or "3d" in lower_args:
         from semanticfs.visualizer import launch_visualizer
         launch_visualizer()
         return
