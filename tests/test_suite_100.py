@@ -17,7 +17,7 @@ QUERIES_100 = [
     "engineering physics end semester question bank",
     "CS3101 question bank",
     "CS3201 PIP question bank unit 1 to 5",
-    "CS3303A assignment Manoj Chetty",
+    "CS3303A assignment submission",
     "MA3101 MAC end semester question bank",
     "PC LAB report pdf",
     "IA-2 physics question bank",
@@ -30,12 +30,12 @@ QUERIES_100 = [
     "mathematics question bank",
     "physics semester exam questions",
     "pip question bank modified",
-    "assignment Manoj",
+    "assignment submission",
     "engineering question paper",
     "lab experiment pdf",
 
     # Career & Personal (15 queries)
-    "resume cv Manoj Chetty",
+    "resume cv application",
     "resume docx",
     "curriculum vitae",
     "hackathon presentation slides",
@@ -48,7 +48,7 @@ QUERIES_100 = [
     "document3 docx",
     "fedora media writer log",
     "nerve center driver patch",
-    "personal document Manoj",
+    "personal document notes",
     "hackathon ppt presentation",
 
     # Codebase & Developer (30 queries)

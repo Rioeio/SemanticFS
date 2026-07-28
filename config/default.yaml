@@ -1,8 +1,8 @@
 # SemanticFS Configuration
 
-# Directories to watch for user files
+# Directories to watch for user files (~ dynamically expands to user home directory on any OS)
 watch_directories:
-  - "C:\\Users\\Manoj"
+  - "~"
 
 # File types to index
 include_patterns:

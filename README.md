@@ -11,9 +11,10 @@
  |_____/ \___|_| |_| |_|\__,_|_|   \__|_|\___|_|    |_____/ 
 ```
 
+![Status](https://img.shields.io/badge/status-Active%20Alpha-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
-![Rust](https://img.shields.io/badge/rust-core-orange)
+![Rust](https://img.shields.io/badge/rust-experimental-lightgrey)
 ![Embeddings](https://img.shields.io/badge/embeddings-BAAI%2Fbge--small--en--v1.5-purple)
 ![Multimodal](https://img.shields.io/badge/multimodal-CLIP%20Vision-pink)
 ![OCR](https://img.shields.io/badge/OCR-Tesseract%2FEasyOCR-yellow)
@@ -23,23 +24,25 @@
 
 ## System Overview
 
-**SemanticFS** eliminates the cognitive friction of hierarchical file system retrieval. Instead of requiring exact folder paths (e.g., `C:/Users/Documents/v1/final.py`), SemanticFS allows users to retrieve files based on ambient activity context, semantic concepts, visual image scenes, printed OCR text, and activity history across all user drive locations.
+**SemanticFS** eliminates the cognitive friction of hierarchical file system retrieval. Instead of requiring exact folder paths (e.g., `Documents/v1/final.py`), SemanticFS allows users to retrieve files based on ambient activity context, semantic concepts, visual image scenes, printed OCR text, and activity history across all user drive locations.
 
 ---
 
 ## Core Capabilities & Features
 
-- **Upgraded Neural Vector Engine (`BAAI/bge-small-en-v1.5`)**: Powered by the #1 MTEB Benchmark embedding model (`BAAI/bge-small-en-v1.5`) and embedded `ChromaDB` (384-dimensional dense neural vectors with +35% higher semantic retrieval accuracy for code and technical terms).
-- **Sub-5ms Query Latency**: Instant search responses via pre-warmed background IPC socket server on `127.0.0.1:9876` (`sfind start`).
+- **Local Neural Vector Search (`BAAI/bge-small-en-v1.5`)**: Powered by `BAAI/bge-small-en-v1.5` (a compact, high-throughput 384-dimensional embedding model optimized for local offline vector search) and embedded `ChromaDB`.
+- **Latency Benchmarks**:
+  - **Sub-5ms Pre-Warmed Socket IPC**: IPC socket server on `127.0.0.1:9876` (`sfind start`) returns pre-warmed memory embeddings in **~3ms - 5ms**.
+  - **18.97ms Batch Vector Query**: Cold vector database queries across 3,000+ indexed chunks average **18.97ms / query** in stress benchmarks.
 - **AST Syntax & Header-Aware Semantic Chunker (`semanticfs/ast_chunker.py`)**: Parses Python files strictly by function (`def`) and class (`class`) AST boundaries and Markdown files by `#` headers so code logic is never cut in half mid-function.
 - **Multimodal CLIP Vision Scene Indexing**: Integrated HuggingFace Transformers `CLIPModel` (`openai/clip-vit-base-patch32`) for zero-shot image scene classification ("beach sunset", "receipt invoice text", "landscape", "face photo").
 - **Offline OCR Text Extraction Engine (`semanticfs/ocr.py`)**: Tesseract / EasyOCR pipeline extracts printed text inside scanned PDFs, receipts, invoices, code error screenshots, and images for full-text searchability.
-- **Full User Space System Coverage (`C:\Users\Manoj`)**: Automatically scans and monitors the entire user directory tree (`Documents`, `Desktop`, `Downloads`, `Pictures`, `Videos`, `Music`, `Dev`, and custom workspaces).
+- **Full User Space System Coverage (`%USERPROFILE%` / `~`)**: Automatically scans and monitors the entire user directory tree (`Documents`, `Desktop`, `Downloads`, `Pictures`, `Videos`, `Music`, `Dev`, and custom workspaces).
 - **16-Worker ThreadPoolExecutor Parallel Scanning**: Multi-threaded parallel file crawler in `daemon.py` indexes 50,000+ files across the system in parallel.
 - **Virtual Smart Collections (`sfind collection`)**: Create virtual shortcut folders in File Explorer without moving a single physical file on disk (**Zero Disk Modification Risk**).
 - **Structured Search Operators & Sharp Precision Engine**: Pinpoint search using inline operators (`ext:`, `file:`, `in:`, `tag:`, `+must`, `-exclude`, `score:0.5`) alongside 100% natural language search with zero mandatory file format typing.
 - **Interactive Terminal Interface**: Arrow-key navigation, live `monokai` syntax-highlighted code preview box, `Enter` to open File Explorer and highlight the selected file, `o` for App launch, `c` for VS Code, and `y`/`p` for Clipboard path/snippet copy.
-- **Terminal Folder Jump (`sfind jump <query>`)**: Finds the target file and copies the `cd "C:/folder/path"` command directly to the Windows Clipboard for instant shell navigation.
+- **Terminal Folder Jump (`sfind jump <query>`)**: Finds the target file and copies the `cd "/folder/path"` command directly to the Windows Clipboard for instant shell navigation.
 - **Semantic Duplicate File Finder (`sfind duplicates`)**: Scans the vector store to identify high-similarity duplicate files across your drive via vector similarity.
 - **Custom File Annotations & Tags (`sfind tag <file> <note>`)**: Attach custom semantic notes and tags to any file for boosted retrieval relevance.
 - **3D Movable "Bad Apple!!" ASCII Raycasting Visualizer (`sfind model`)**: Standalone 3D ASCII raycasting engine (`semanticfs/visualizer.py`) projects rotating 384-dimensional vector topology, Touhou black-and-white silhouettes, and CLIP vision patches with real-time WASD/Arrow controls, zoom, and mode switching.
@@ -208,11 +211,10 @@ When navigating search results in the terminal (`sfind <query>`), press any of t
 
 ---
 
-## Native Rust Core Crate (`native_core/`)
+## Native Rust Core Crate (`native_core/`) [Experimental / Planned Integration]
 
-Includes a native Rust engine crate (`libsemanticfs`) in `native_core/`:
-- `native_core/Cargo.toml`
-- `native_core/src/lib.rs`
+> [!NOTE]
+> The native Rust engine crate (`libsemanticfs`) in `native_core/` is currently experimental and standalone (`native_core/Cargo.toml`, `native_core/src/lib.rs`). Python vector search currently utilizes embedded ChromaDB; PyO3 bindings for native Rust core acceleration are planned for Phase 2.
 
 To build the native Rust release binary:
 ```bash
@@ -222,10 +224,10 @@ cargo build --release
 
 ---
 
-## Benchmark Summary
+## Benchmark Verification Results
 
-* **100-Query Automated Benchmark Suite**: **95.00% Overall Success Average** (0.82 Mean Match Score out of 1.00).
-* **1,000 Real Drive-Derived Stress Test**: **88.10% Overall Success Average** (**18.97 ms / query search latency**).
+* **100-Query Automated Benchmark Suite (`tests/test_suite_100.py`)**: **95.00% Overall Success Average** (0.82 Mean Match Score out of 1.00).
+* **1,000 Real Drive-Derived Stress Test (`tests/run_drive_stress_fast.py`)**: **88.10% Overall Success Average** (**18.97 ms / query search latency**).
 
 ---
 

@@ -13,7 +13,7 @@ from semanticfs.store import VectorStore
 
 BASE_TERMS = [
     "physics", "question", "bank", "engineering", "semester", "exam", "cs3101", "cs3201",
-    "pip", "assignment", "manoj", "chetty", "rubrics", "resume", "cv", "hackathon",
+    "pip", "assignment", "project", "author", "rubrics", "resume", "cv", "hackathon",
     "presentation", "slides", "pptx", "docx", "pdf", "jpeg", "image", "photo", "whatsapp",
     "fedora", "log", "driver", "patch", "python", "linear", "algebra", "matrix", "solver",
     "vector", "store", "chromadb", "daemon", "watcher", "trainer", "chunker", "router",

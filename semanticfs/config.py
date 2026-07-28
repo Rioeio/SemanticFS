@@ -7,10 +7,11 @@ from typing import Any
 
 import yaml
 
+DEFAULT_CONFIG_PATH = Path(__file__).parent.parent / "config" / "default.yaml"
 
 @dataclass
 class EmbeddingConfig:
-    model_name: str = "all-MiniLM-L6-v2"
+    model_name: str = "BAAI/bge-small-en-v1.5"
     max_tokens: int = 512
 
 @dataclass
@@ -25,7 +26,7 @@ class ContextConfig:
 
 @dataclass
 class WatcherConfig:
-    watch_directories: list[Path] = field(default_factory=list)
+    watch_directories: list[Path] = field(default_factory=lambda: [Path("~").expanduser()])
     include_patterns: list[str] = field(default_factory=lambda: ["*"])
     exclude_patterns: list[str] = field(default_factory=lambda: [".git*", "*.tmp"])
     max_file_size: int = 10 * 1024 * 1024  # 10 MB
@@ -52,7 +53,7 @@ class Config:
     linker: LinkerConfig = field(default_factory=LinkerConfig)
 
     _instance: Config | None = None
-    _config_path: Path = Path("C:/Dev/SemanticFS/config/default.yaml")
+    _config_path: Path = DEFAULT_CONFIG_PATH
 
     @classmethod
     def get_instance(cls, config_path: Path | None = None) -> Config:
@@ -62,8 +63,7 @@ class Config:
 
     @classmethod
     def _load(cls, config_path: Path | None = None) -> Config:
-        default_path = Path("C:/Dev/SemanticFS/config/default.yaml")
-        path_to_load = config_path if config_path else default_path
+        path_to_load = config_path if config_path else DEFAULT_CONFIG_PATH
         
         data: dict[str, Any] = {}
         if path_to_load.exists():
@@ -84,14 +84,14 @@ class Config:
         if "watch_directories" in data:
             watch_dirs_raw = data["watch_directories"]
             
-        watch_dirs = [Path(d) for d in watch_dirs_raw] if watch_dirs_raw else []
+        watch_dirs = [Path(d).expanduser() for d in watch_dirs_raw] if watch_dirs_raw else [Path("~").expanduser()]
         
         inc_patterns = data.get("watcher", {}).get("include_patterns") or data.get("include_patterns") or ["*"]
         exc_patterns = data.get("watcher", {}).get("exclude_patterns") or data.get("exclude_patterns") or [".git*", "*.tmp"]
 
         cfg = cls(
             embedding=EmbeddingConfig(
-                model_name=get_env_or_dict("embedding", "model_name", "all-MiniLM-L6-v2"),
+                model_name=get_env_or_dict("embedding", "model_name", "BAAI/bge-small-en-v1.5"),
                 max_tokens=get_env_or_dict("embedding", "max_tokens", 512, int),
             ),
             storage=StorageConfig(
