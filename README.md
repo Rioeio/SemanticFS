@@ -21,6 +21,44 @@
 
 ---
 
+## Interactive Terminal Interface
+
+```text
+                      ✨ SemanticFS Neural Search Results                      
+┌────────┬────────────────────┬───────────────┬───────────────┬───────────────┐
+│  Rank  │  Relevance Score   │ Filename      │ Filepath      │ Match Snippet │
+├────────┼────────────────────┼───────────────┼───────────────┼───────────────┤
+│   1    │   92% █████████░   │ linear_solver │ C:\Dev\Sem... │ def gaussian  │
+│        │                    │ .py           │               │ _elimination  │
+│   2    │   84% ████████░░   │ quantum_notes │ C:\Dev\Sem... │ ## Superposi  │
+│        │                    │ .md           │               │ tion & Qubits │
+└────────┴────────────────────┴───────────────┴───────────────┴───────────────┘
+  [Enter/e] Open Explorer & Highlight  [o] Open App  [c] VS Code  [y] Copy Path  [p] Copy Snippet
+```
+
+---
+
+## Why SemanticFS? (Positioning & Comparison)
+
+SemanticFS is not designed to replace instant filename indexes like Everything or Spotlight — it is built specifically for the scenario where **you do not remember the exact filename or folder structure**.
+
+| Feature / Capability | voidtools Everything | macOS Spotlight / Windows Search | VS Code Workspace Search | SemanticFS |
+|---|---|---|---|---|
+| **Sub-Millisecond Wildcard Search (`*.pdf`)** | 🥇 **Best (Instant)** | ⚡ Fast | ⚡ Fast (Open workspace) | ⚡ Fast |
+| **Conceptual Natural Language ("tax bill 2026")** | ❌ No | ⚠️ Partial (Metadata) | ❌ No | 🥇 **Best (Dense Vector AI)** |
+| **AST Code Function Chunker (`def` / `class`)** | ❌ No | ❌ No | ⚠️ Partial | 🥇 **Best (AST-Aware)** |
+| **Virtual Smart Collections (Zero Disk Risk)** | ❌ No | ⚠️ Saved Searches | ❌ No | 🥇 **Best (Explorer Shortcuts)** |
+| **Multimodal Scene & Scanned OCR Text** | ❌ No | ⚠️ PDF Text | ❌ No | 🥇 **Best (CLIP + Tesseract)** |
+
+---
+
+## IPC Security & Local Trust Model
+
+* **Local Loopback Socket Isolation**: The background daemon socket server listens **strictly on `127.0.0.1:9876`** (localhost loopback interface only). It does not bind to external network adapters and is inaccessible to network traffic outside your machine.
+* **Local Process Trust Model**: The IPC socket trusts local processes executing within the same OS user session. Network egress is 0.0% — zero telemetry or vector data ever leaves your computer.
+
+---
+
 ## System Overview
 
 **SemanticFS** eliminates the cognitive friction of hierarchical file system retrieval. Instead of requiring exact folder paths (e.g., `Documents/v1/final.py`), SemanticFS allows users to retrieve files based on ambient activity context, semantic concepts, visual image scenes, printed OCR text, and activity history across all user drive locations.
