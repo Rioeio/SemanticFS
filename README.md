@@ -178,6 +178,40 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 
 ---
 
+## Detailed System Architecture
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   sfind CLI                                            │
+│      (Interactive Arrow Menu / Live Monokai Code Preview / Action Keys / IPC Client)    │
+└───────────────────────────┬────────────────────────────────────────────────────────────┘
+                            │ (Sub-5ms Socket Query / IPC Port 9876)
+            ┌───────────────┴───────────────┐
+            ▼                               ▼
+  ┌───────────────────────────────────┐           ┌───────────────────────────────────┐
+  │   CORE NEURAL VECTOR ENGINE       │           │   VECTOR STORE (ChromaDB + RAM)   │
+  │   • BAAI/bge-small-en-v1.5 (384D) │ ────────► │   • 384-Dim Neural Vectors        │
+  │   • AST Syntax & Header Chunker   │           │   • Recency Boost (+0.10 Decay)   │
+  │   • Structured Query Parser       │           │   • Category Intent Boost (+0.50) │
+  └───────────────────────────────────┘           └───────────────────────────────────┘
+                    ▲                                               ▲
+                    │                                               │
+┌───────────────────┴───────────────────────────────────────────────┴───────────────────┐
+│              16-Worker ThreadPoolExecutor Parallel Ambient Daemon                      │
+│                (Multi-Threaded Scanner & File Watcher / ~/.semanticfs)                │
+└───────────────────────────┬───────────────────────────────────────────────────────────┘
+                            │
+            ┌───────────────┴───────────────┐
+            ▼                               ▼
+  ┌───────────────────────────────────┐           ┌───────────────────────────────────┐
+  │    Virtual Smart Collections      │           │   OPTIONAL FEATURE EXTRAS         │
+  │  (Zero Disk Modification Risk)    │           │   • CLIP Vision (pip install .[vision])│
+  │  • ~/.semanticfs/virtual_drive    │           │   • Tesseract OCR (pip install .[ocr]) │
+  └───────────────────────────────────┘           └───────────────────────────────────┘
+```
+
+---
+
 ## Native Rust Core Crate (`native_core/`) [Experimental / Planned Integration]
 
 > [!NOTE]
