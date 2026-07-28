@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Manoj"},
+    {name = "SemanticFS Contributors"},
 ]
 
 dependencies = [
@@ -18,7 +18,6 @@ dependencies = [
     "sentence-transformers>=3.0",
     "chromadb>=0.5",
     "psutil>=6.0",
-    "pygetwindow>=0.0.9",
     "click>=8.1",
     "rich>=13.0",
     "pyyaml>=6.0",
@@ -29,7 +28,31 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+vision = [
+    "transformers>=4.40",
+    "torch>=2.0",
+    "pillow>=10.0",
+]
+ocr = [
+    "pytesseract>=0.3",
+    "easyocr>=1.7",
+    "pillow>=10.0",
+]
+onnx = [
+    "optimum[onnxruntime]>=1.19",
+    "transformers>=4.40",
+]
 train = [
+    "datasets>=2.19",
+    "accelerate>=0.30",
+]
+all = [
+    "transformers>=4.40",
+    "torch>=2.0",
+    "pillow>=10.0",
+    "pytesseract>=0.3",
+    "easyocr>=1.7",
+    "optimum[onnxruntime]>=1.19",
     "datasets>=2.19",
     "accelerate>=0.30",
 ]

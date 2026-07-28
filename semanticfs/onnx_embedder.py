@@ -6,7 +6,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-def export_onnx_model(model_name: str = "all-MiniLM-L6-v2", output_dir: Path | None = None) -> Path | None:
+def export_onnx_model(model_name: str = "BAAI/bge-small-en-v1.5", output_dir: Path | None = None) -> Path | None:
     """Exports PyTorch SentenceTransformers model to ONNX INT8 quantized format for 4X faster CPU inference."""
     if output_dir is None:
         output_dir = Path("~/.semanticfs/onnx_model").expanduser()
