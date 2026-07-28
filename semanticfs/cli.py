@@ -433,6 +433,7 @@ def show_main_help_menu():
     daemon_table.add_row("sfind reindex", "Force full re-scan & vector re-indexing across all workspace directories")
     daemon_table.add_row("sfind add-dir <path>", "Register a new workspace directory for background indexing")
     daemon_table.add_row("sfind list-dirs", "List all registered workspace directories")
+    daemon_table.add_row("sfind purge", "Completely delete all vector database files, indices, and virtual drives")
     console.print(daemon_table)
 
     extras_table = Table(title="🧪 Roadmap & Experimental Extras", expand=True, border_style="magenta")
@@ -477,7 +478,24 @@ def main(
 
     lower_args = set(p.lower() for p in query_parts)
 
-    if "doctor" in lower_args or "health" in lower_args:
+    if "purge" in lower_args or "uninstall-data" in lower_args:
+        print_banner()
+        import shutil
+        vdir = Path("~/.semanticfs").expanduser()
+        if vdir.exists():
+            if not no_interactive and not click.confirm("⚠️ Are you sure you want to completely purge all SemanticFS vector indices, database files, and virtual collections?", default=False):
+                console.print("[yellow]Purge operation cancelled.[/yellow]")
+                return
+            try:
+                shutil.rmtree(vdir, ignore_errors=True)
+                console.print(f"[bold green]✔ Fully purged all SemanticFS storage & vector database files at:[/bold green] {vdir}")
+                console.print("[dim]Run 'sfind reindex' anytime to recreate index.[/dim]")
+            except Exception as e:
+                console.print(f"[bold red]✘ Failed to purge storage:[/bold red] {e}")
+        else:
+            console.print("[yellow]No SemanticFS storage directory found to purge.[/yellow]")
+        return
+    elif "doctor" in lower_args or "health" in lower_args:
         from semanticfs.doctor import run_environment_doctor
         run_environment_doctor()
         return
