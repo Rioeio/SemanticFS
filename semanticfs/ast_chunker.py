@@ -26,22 +26,26 @@ def chunk_python_ast(filepath: Path, content: str) -> list[FileChunk]:
                 block_code = "\n".join(lines[start_l - 1:end_l])
                 if len(block_code.strip()) > 15:
                     chunks.append(FileChunk(
-                        filepath=filepath,
-                        chunk_index=chunk_idx,
+                        chunk_id=f"{filepath}#chunk_{chunk_idx}",
+                        parent_filepath=str(filepath),
+                        filename=filepath.name,
+                        text=block_code,
                         start_line=start_l,
                         end_line=end_l,
-                        text=block_code
+                        chunk_index=chunk_idx
                     ))
                     chunk_idx += 1
                     
         # Fallback if no functions/classes found
         if not chunks:
             chunks.append(FileChunk(
-                filepath=filepath,
-                chunk_index=0,
+                chunk_id=f"{filepath}#chunk_0",
+                parent_filepath=str(filepath),
+                filename=filepath.name,
+                text=content[:5000],
                 start_line=1,
                 end_line=len(lines),
-                text=content[:5000]
+                chunk_index=0
             ))
             
         return chunks[:25]
@@ -65,27 +69,31 @@ def chunk_markdown_headers(filepath: Path, content: str) -> list[FileChunk]:
             text = "\n".join(current_block)
             if len(text.strip()) > 15:
                 chunks.append(FileChunk(
-                    filepath=filepath,
-                    chunk_index=chunk_idx,
+                    chunk_id=f"{filepath}#chunk_{chunk_idx}",
+                    parent_filepath=str(filepath),
+                    filename=filepath.name,
+                    text=text,
                     start_line=start_line,
                     end_line=i - 1,
-                    text=text
+                    chunk_index=chunk_idx
                 ))
                 chunk_idx += 1
             current_block = [line]
             start_line = i
         else:
             current_block.append(line)
-            
+
     if current_block:
         text = "\n".join(current_block)
         if len(text.strip()) > 15:
             chunks.append(FileChunk(
-                filepath=filepath,
-                chunk_index=chunk_idx,
+                chunk_id=f"{filepath}#chunk_{chunk_idx}",
+                parent_filepath=str(filepath),
+                filename=filepath.name,
+                text=text,
                 start_line=start_line,
                 end_line=len(lines),
-                text=text
+                chunk_index=chunk_idx
             ))
-            
+
     return chunks[:25]
