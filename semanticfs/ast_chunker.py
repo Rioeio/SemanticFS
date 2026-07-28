@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import logging
 from pathlib import Path
+
 from semanticfs.chunker import FileChunk
 
 logger = logging.getLogger(__name__)

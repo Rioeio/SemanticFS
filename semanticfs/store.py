@@ -228,8 +228,8 @@ class VectorStore:
         try:
             parent_id = VectorStore.generate_id(target_filepath)
             
-            from semanticfs.embedder import Embedder
             from semanticfs.config import Config
+            from semanticfs.embedder import Embedder
             config = Config.get_instance()
             embedder = Embedder(config.embedding.model_name, config.embedding.max_tokens)
             

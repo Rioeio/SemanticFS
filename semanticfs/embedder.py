@@ -100,18 +100,15 @@ class Embedder:
                             lines.append(" | ".join(row_vals))
                     sheet_texts.append("\n".join(lines[:100]))
                 content = "\n\n".join(sheet_texts)
-            elif ext in (".csv", ".tsv"):
-                with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                    content = f.read(5000)
-            elif ext in (".ipynb", ".json", ".yaml", ".yml", ".toml", ".xml"):
+            elif ext in (".csv", ".tsv") or ext in (".ipynb", ".json", ".yaml", ".yml", ".toml", ".xml"):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read(5000)
             elif ext in (".py", ".js", ".ts", ".tsx", ".jsx", ".html", ".css", ".c", ".cpp", ".h", ".hpp", ".cs", ".java", ".rs", ".go", ".rb", ".php", ".swift", ".kt", ".md", ".txt", ".sh", ".bat", ".ps1", ".sql", ".r", ".R", ".log"):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read(10000)
             elif ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"):
-                from semanticfs.vision import extract_image_visual_metadata
                 from semanticfs.ocr import extract_ocr_text
+                from semanticfs.vision import extract_image_visual_metadata
                 visual_meta = extract_image_visual_metadata(filepath)
                 ocr_text = extract_ocr_text(filepath)
                 if ocr_text:

@@ -11,7 +11,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import click
 from rich.logging import RichHandler
 
 from semanticfs.config import Config

@@ -4,7 +4,6 @@ import math
 import os
 import sys
 import time
-from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel

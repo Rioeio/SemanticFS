@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Set
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg", ".raw", ".heic"}
 AUDIO_EXTS = {".mp3", ".m4p", ".wav", ".flac", ".aac", ".ogg", ".wma", ".m4a"}
@@ -22,12 +21,12 @@ CODE_KEYWORDS = {"code", "script", "scripts", "function", "functions", "class", 
 @dataclass
 class QueryIntent:
     clean_query: str
-    target_exts: Set[str]
+    target_exts: set[str]
     intent_category: str | None
 
 def detect_query_intent(query: str) -> QueryIntent:
     words = re.findall(r'\b\w+\b', query.lower())
-    target_exts: Set[str] = set()
+    target_exts: set[str] = set()
     category: str | None = None
 
     for w in words:

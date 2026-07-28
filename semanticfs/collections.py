@@ -60,8 +60,6 @@ class CollectionManager:
 
     def sync_virtual_drive(self) -> None:
         """Populates Windows File Explorer virtual drive with shortcut files (.url/.lnk) without moving real files."""
-        import os
-        import subprocess
         try:
             VIRTUAL_DRIVE_DIR.mkdir(parents=True, exist_ok=True)
             

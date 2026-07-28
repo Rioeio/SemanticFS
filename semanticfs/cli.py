@@ -201,7 +201,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
                     snip = str(results[selected_index].metadata.get("content_snippet", ""))
                     if copy_to_clipboard(snip):
                         live.stop()
-                        console.print(f"\n[bold green]📋 Copied Match Snippet to Clipboard![/bold green]")
+                        console.print("\n[bold green]📋 Copied Match Snippet to Clipboard![/bold green]")
                     return
                 elif key in (b'\x1b', b'q', b'Q'):  # Quit
                     live.stop()
@@ -523,7 +523,7 @@ def main(
             parent_folder = str(Path(results[0].filepath).parent)
             copy_to_clipboard(f'cd "{parent_folder}"')
             console.print(f"[bold green]✔ Parent Folder Path:[/bold green] {parent_folder}")
-            console.print(f"[bold yellow]Copied cd command to clipboard![/bold yellow] Paste into terminal with Ctrl+V.")
+            console.print("[bold yellow]Copied cd command to clipboard![/bold yellow] Paste into terminal with Ctrl+V.")
         else:
             console.print(f"[yellow]No match found to jump for:[/yellow] '{q}'")
         return
@@ -602,7 +602,7 @@ def main(
             
             if cm.create_collection(col_name, col_query, fps):
                 console.print(f"[bold green]✔ Created Virtual Collection:[/bold green] '{col_name}' ({len(fps)} virtual shortcuts)")
-                console.print(f"[dim]Your physical files on disk remain 100% untouched![/dim]")
+                console.print("[dim]Your physical files on disk remain 100% untouched![/dim]")
             return
 
         elif action in ("delete", "rm") and len(sub_args) > 1:

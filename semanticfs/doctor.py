@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.table import Table
 
 console = Console()
@@ -65,10 +64,10 @@ def run_environment_doctor():
     # 5. Core Package: PyMuPDF / docx / pptx / openpyxl
     docs_ok = True
     try:
-        import fitz
         import docx
-        import pptx
+        import fitz
         import openpyxl
+        import pptx
     except ImportError:
         docs_ok = False
 

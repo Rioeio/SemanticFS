@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
-from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
