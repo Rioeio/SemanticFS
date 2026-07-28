@@ -93,7 +93,7 @@ sfind purge
 
 ## Roadmap & Experimental Extras
 
-The following features are active in development and available via optional install extras:
+The following features are active in development and available via optional install extras. See [docs/EXPERIMENTAL_ROADMAP.md](docs/EXPERIMENTAL_ROADMAP.md) for empirical quality gates required for promotion to Core:
 
 - **Multimodal CLIP Vision Indexing (`pip install -e ".[vision]"`)**: Integrated HuggingFace Transformers `CLIPModel` (`openai/clip-vit-base-patch32`) for zero-shot image scene classification.
 - **Offline OCR Text Extraction Engine (`pip install -e ".[ocr]"`)**: Tesseract / EasyOCR pipeline (`semanticfs/ocr.py`) extracts printed text inside scanned PDFs, receipts, invoices, and screenshots.
@@ -101,6 +101,9 @@ The following features are active in development and available via optional inst
 - **ONNX INT8 Model Quantization (`pip install -e ".[onnx]"`)**: Export PyTorch model weights to quantized ONNX INT8 format (`sfind onnx`).
 - **Virtual Drive Mount Engine (`sfind mount`)**: Initializes virtual search shortcut directory at `~/.semanticfs/virtual_drive` for Explorer integration.
 - **Git Commit Search (`sfind commit <query>`)**: Search git commit messages across all monitored repositories.
+
+> [!NOTE]
+> **Experimental Promotion Policy**: No roadmap feature is promoted to "Core Product" until it passes reproducible accuracy, latency, and regression benchmarks. See [EXPERIMENTAL_ROADMAP.md](docs/EXPERIMENTAL_ROADMAP.md).
 
 > [!TIP]
 > **Fun Extra Callout**: Run `sfind model` in your terminal to launch the **3D Movable "Bad Apple!!" ASCII Raycasting Neural Visualizer** (`semanticfs/visualizer.py`) with real-time WASD/Arrow controls, zoom, and mode switching.
