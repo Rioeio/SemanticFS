@@ -44,10 +44,10 @@ class DebouncedEventHandler(FileSystemEventHandler):
 
 class FileWatcher:
     """Watches the file system for changes."""
-    def __init__(self, directories: list[Path], callback: Callable[[str, Path], None]):
+    def __init__(self, directories: list[Path], callback: Callable[[str, Path], None], debounce_ms: int = 500):
         self.directories = directories
         self.observer = Observer()
-        self.handler = DebouncedEventHandler(callback)
+        self.handler = DebouncedEventHandler(callback, debounce_seconds=debounce_ms / 1000.0)
 
     def start(self) -> None:
         """Start watching directories."""

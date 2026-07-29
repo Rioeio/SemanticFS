@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 def train_local_model(epochs: int = 1, output_dir: Path | None = None) -> Path:
     """Fine-tunes the local sentence-transformer model on the user's indexed codebase/files."""
-    from sentence_transformers import InputExample, SentenceTransformer, losses
+    from sentence_transformers import InputExample, SentenceTransformer
+    from sentence_transformers import losses  # type: ignore[attr-defined]
     from torch.utils.data import DataLoader
 
     config = Config.get_instance()
@@ -55,7 +56,7 @@ def train_local_model(epochs: int = 1, output_dir: Path | None = None) -> Path:
     console.print(f"[bold cyan]⚡ Fine-tuning '{config.embedding.model_name}' on local dataset...[/bold cyan]")
 
     model = SentenceTransformer(config.embedding.model_name)
-    train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=16)
+    train_dataloader: DataLoader = DataLoader(train_examples, shuffle=True, batch_size=16)  # type: ignore[arg-type]
     train_loss = losses.MultipleNegativesRankingLoss(model)
 
     output_dir.mkdir(parents=True, exist_ok=True)

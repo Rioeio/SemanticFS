@@ -108,8 +108,8 @@ class Embedder:
                     content = f.read(10000)
             elif ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".svg"):
                 from semanticfs.ocr import extract_ocr_text
-                from semanticfs.vision import extract_image_visual_metadata
-                visual_meta = extract_image_visual_metadata(filepath)
+                from semanticfs.vision import extract_image_visual_content
+                visual_meta = extract_image_visual_content(filepath)
                 ocr_text = extract_ocr_text(filepath)
                 if ocr_text:
                     content = f"{visual_meta}\nOCR Printed Text: {ocr_text}"
