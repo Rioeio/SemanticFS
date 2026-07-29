@@ -69,8 +69,8 @@ def get_dir_size_mb(path: Path) -> float:
 def open_path_in_app(filepath: str):
     """Launches file directly in associated Windows application."""
     console.print(f"\n[bold green]🚀 Launching File in App:[/bold green] [underline]{filepath}[/underline]")
-    if os.name == 'nt':
-        os.startfile(filepath)
+    if hasattr(os, "startfile"):
+        os.startfile(filepath)  # type: ignore[attr-defined]
     elif sys.platform == 'darwin':
         os.system(f"open '{filepath}'")
     else:
@@ -172,13 +172,18 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
     selected_index = 0
 
     if os.name == 'nt':
-        import msvcrt
+        try:
+            import msvcrt  # type: ignore[import-not-found,import-untyped]
+        except ImportError:
+            msvcrt = None  # type: ignore[assignment]
 
         console.print("\n[bold bright_cyan]⌨️ Action Shortcuts:[/bold bright_cyan] [bold green][Enter/e][/bold green] Explorer Highlight  [bold magenta][o][/bold magenta] Launch App  [bold blue][c][/bold blue] VS Code  [bold yellow][y][/bold yellow] Copy Path  [bold yellow][p][/bold yellow] Copy Snippet  [bold red][q/Esc][/bold red] Quit\n")
 
         with Live(render_table_with_preview(results, selected_index), console=console, refresh_per_second=10) as live:
             while True:
-                key = msvcrt.getch()
+                if msvcrt is None:
+                    break
+                key = msvcrt.getch()  # type: ignore[attr-defined]
                 if key in (b'\r', b'\n', b'e', b'E'):  # Enter / e -> Open Explorer Highlight
                     live.stop()
                     open_path(results[selected_index].filepath, open_with_code=False)
@@ -216,7 +221,7 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
                         open_path(results[selected_index].filepath, open_with_code)
                         return
                 elif key in (b'\x00', b'\xe0'):  # Arrow keys
-                    arrow = msvcrt.getch()
+                    arrow = msvcrt.getch()  # type: ignore[attr-defined]
                     if arrow == b'H':  # Up
                         selected_index = (selected_index - 1) % total
                     elif arrow == b'P':  # Down

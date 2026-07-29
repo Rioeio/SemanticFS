@@ -70,11 +70,11 @@ class Embedder:
 
             elif ext == ".docx":
                 import docx
-                doc = docx.Document(filepath)
+                doc = docx.Document(str(filepath))
                 content = "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
             elif ext == ".pptx":
                 from pptx import Presentation
-                prs = Presentation(filepath)
+                prs = Presentation(str(filepath))
                 slide_texts = []
                 for i, slide in enumerate(prs.slides, start=1):
                     lines = [f"--- Slide {i} ---"]

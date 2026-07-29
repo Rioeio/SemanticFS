@@ -22,7 +22,8 @@ class DebouncedEventHandler(FileSystemEventHandler):
         if event.is_directory:
             return
 
-        path = Path(event.src_path)
+        src = event.src_path.decode("utf-8") if isinstance(event.src_path, bytes) else str(event.src_path)
+        path = Path(src)
         with self.lock:
             self.events[path] = event.event_type
 
