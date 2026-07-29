@@ -116,6 +116,7 @@ def run_reproducible_benchmark():
     print("=" * 70 + "\n")
 
     # Cleanup temporary test database
+    store.close()
     import shutil
     if TEST_DB_PATH.exists():
         shutil.rmtree(TEST_DB_PATH, ignore_errors=True)

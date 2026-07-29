@@ -308,3 +308,14 @@ class VectorStore:
         except Exception as e:
             logger.debug(f"count error: {e}")
             return 0
+
+    def close(self) -> None:
+        """Close ChromaDB client connection and release file handles."""
+        if self._client is not None:
+            try:
+                if hasattr(self._client, "_system") and hasattr(self._client._system, "stop"):
+                    self._client._system.stop()
+            except Exception:
+                pass
+            self._client = None
+            self._collection = None

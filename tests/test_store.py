@@ -29,3 +29,4 @@ def test_store_cycle():
         
         store.delete(file_id)
         assert store.get(file_id) is None
+        store.close()
