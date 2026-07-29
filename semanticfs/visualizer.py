@@ -114,7 +114,7 @@ class NeuralModelVisualizer:
         sil_lines = BAD_APPLE_SILHOUETTES[sil_idx]
 
         grid = [[" " for _ in range(self.width)] for _ in range(self.height)]
-        
+
         # Overlay 3D rotating neural matrix nodes onto Bad Apple silhouette
         proj_nodes = []
         for x, y, z in self.nodes:
@@ -206,7 +206,7 @@ class NeuralModelVisualizer:
 
         import msvcrt
         os.system('cls' if os.name == 'nt' else 'clear')
-        
+
         while True:
             if self.animating:
                 self.angle_y += 3.5
@@ -215,20 +215,20 @@ class NeuralModelVisualizer:
 
             frame_ascii = self.render_frame()
             current_mode_name = self.modes[self.mode_index].replace('_', ' ').title()
-            
+
             os.system('cls' if os.name == 'nt' else 'clear')
             console.print("[bold cyan]🍎 'Bad Apple!!' ASCII Neural Model Visualizer[/bold cyan] [bold yellow]● Touhou Silhouette Raycasting[/bold yellow]")
             console.print(f"[dim]Mode: {current_mode_name} | Model: BAAI/bge-small-en-v1.5 + CLIP Vision | Zoom: {self.zoom:.1f}x[/dim]\n")
-            
+
             panel = Panel(
                 Text(frame_ascii, style="bold bright_white"),
                 border_style="bright_magenta",
                 title="● High-Detail Movable 'Bad Apple!!' Vector Projection ●"
             )
             console.print(panel)
-            
+
             console.print("\n[bold bright_cyan]⌨️ Movable Controls:[/bold bright_cyan] [bold green][W/A/S/D / Arrow Keys][/bold green] Rotate 3D  [bold green][+/-][/bold green] Zoom  [bold yellow][Space][/bold yellow] Toggle Spin  [bold blue][Tab][/bold blue] Switch Mode  [bold red][Q/Esc][/bold red] Quit\n")
-            
+
             time.sleep(0.04)
 
             if msvcrt.kbhit():

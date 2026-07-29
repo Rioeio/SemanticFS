@@ -26,7 +26,7 @@ def get_clip_engine():
 def extract_image_visual_content(filepath: Path) -> str:
     """Indexes images by actual visual content, EXIF tags, and visual features using PIL & CLIP."""
     content_parts = []
-    
+
     # 1. PIL EXIF & Structural Metadata
     try:
         from PIL import Image, ImageStat
@@ -37,7 +37,7 @@ def extract_image_visual_content(filepath: Path) -> str:
 
             stat = ImageStat.Stat(img)
             avg_rgb = stat.mean[:3] if len(stat.mean) >= 3 else [128, 128, 128]
-            
+
             exif_info = []
             if hasattr(img, "_getexif") and img._getexif():
                 exif_data = img._getexif()
@@ -62,7 +62,7 @@ def extract_image_visual_content(filepath: Path) -> str:
         try:
             from PIL import Image
             image = Image.open(filepath).convert("RGB")
-            
+
             candidate_labels = [
                 "beach sunset vacation ocean sea sand",
                 "document invoice receipt text report code screenshot",
@@ -70,12 +70,12 @@ def extract_image_visual_content(filepath: Path) -> str:
                 "portrait person face human photo",
                 "diagram chart graph vector illustration graphic"
             ]
-            
+
             inputs = clip_processor(text=candidate_labels, images=image, return_tensors="pt", padding=True)
             outputs = clip_model(**inputs)
             logits_per_image = outputs.logits_per_image
             probs = logits_per_image.softmax(dim=1)
-            
+
             top_idx = probs.argmax().item()
             best_label = candidate_labels[top_idx]
             content_parts.append(f"Visual Scene Analysis: {best_label}")

@@ -34,7 +34,7 @@ class Embedder:
     @functools.lru_cache(maxsize=512)
     def embed_text(self, text: str) -> list[float]:
         """Embed a single text string with LRU caching."""
-        truncated = text[:self.max_tokens * 4] 
+        truncated = text[:self.max_tokens * 4]
         embedding = self.model.encode(truncated)
         return embedding.tolist()
 
@@ -60,7 +60,7 @@ class Embedder:
                 for page in doc:
                     content += page.get_text() + "\n"
                 doc.close()
-                
+
                 # Run OCR on scanned PDF if extracted text is empty
                 if len(content.strip()) < 10:
                     from semanticfs.ocr import extract_ocr_text

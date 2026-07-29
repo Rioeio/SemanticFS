@@ -24,10 +24,10 @@ def parse_structured_query(query_str: str) -> StructuredQuery:
     must_exclude = []
     tag_query = None
     min_score = None
-    
+
     clean_parts = []
     tokens = query_str.split()
-    
+
     for token in tokens:
         lower_token = token.lower()
         if lower_token.startswith("ext:") or lower_token.startswith("type:"):
@@ -53,11 +53,11 @@ def parse_structured_query(query_str: str) -> StructuredQuery:
             must_exclude.append(token[1:].lower())
         else:
             clean_parts.append(token)
-            
+
     semantic_text = " ".join(clean_parts).strip()
     if not semantic_text:
         semantic_text = query_str  # Fallback
-        
+
     return StructuredQuery(
         raw_query=query_str,
         semantic_text=semantic_text,

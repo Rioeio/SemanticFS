@@ -1,0 +1,7 @@
+Quarter,Department,Category,AllocatedBudgetUSD,SpentBudgetUSD,Variance
+Q1-2026,Engineering,Infrastructure,125000,118400,+6600
+Q1-2026,Research,EmbeddingModels,85000,84200,+800
+Q2-2026,Engineering,CloudServers,130000,132500,-2500
+Q2-2026,Operations,SecurityAudit,45000,42000,+3000
+Q3-2026,Product,UXResearch,60000,58000,+2000
+Q4-2026,Engineering,HardwareTesting,95000,91000,+4000

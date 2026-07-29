@@ -30,7 +30,7 @@ class FileLinker:
         self.db_path = db_path
         self.co_access_window_seconds = co_access_window_seconds
         self.min_link_weight = min_link_weight
-        
+
         # Ensure parent directory exists
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
@@ -108,7 +108,7 @@ class FileLinker:
                         ON CONFLICT(source_id, target_id) DO UPDATE SET
                         weight = weight + 1.0, last_seen = ?
                     ''', (source, target, now, now))
-                
+
                 cursor.execute('DELETE FROM access_log')
                 conn.commit()
         except Exception as e:
@@ -119,7 +119,7 @@ class FileLinker:
         try:
             with self._connect() as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT source_id, target_id, weight FROM links WHERE source_id = ? AND weight >= ?', 
+                cursor.execute('SELECT source_id, target_id, weight FROM links WHERE source_id = ? AND weight >= ?',
                                (file_id, self.min_link_weight))
                 rows = cursor.fetchall()
                 return [Link(source_id=r[0], target_id=r[1], weight=r[2]) for r in rows]

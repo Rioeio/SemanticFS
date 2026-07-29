@@ -1,62 +1,42 @@
 [
-  {
-    "id": 1,
-    "query": "matrix decomposition linear system solver",
-    "expected_file": "linear_algebra_solver.py",
-    "category": "code"
-  },
-  {
-    "id": 2,
-    "query": "gpu compute instance cloud invoice billing",
-    "expected_file": "tax_invoice_2026.txt",
-    "category": "finance"
-  },
-  {
-    "id": 3,
-    "query": "qubit superposition state vectors hadamard gate",
-    "expected_file": "quantum_computing_notes.md",
-    "category": "academic"
-  },
-  {
-    "id": 4,
-    "query": "senior systems architect software engineer resume",
-    "expected_file": "resume_software_engineer.txt",
-    "category": "career"
-  },
-  {
-    "id": 5,
-    "query": "product architecture meeting agenda action items",
-    "expected_file": "meeting_agenda_q3.md",
-    "category": "planning"
-  },
-  {
-    "id": 6,
-    "query": "gaussian elimination partial pivoting python",
-    "expected_file": "linear_algebra_solver.py",
-    "category": "code"
-  },
-  {
-    "id": 7,
-    "query": "shor 9 qubit quantum error correction",
-    "expected_file": "quantum_computing_notes.md",
-    "category": "academic"
-  },
-  {
-    "id": 8,
-    "query": "nvme vector storage buffer total price",
-    "expected_file": "tax_invoice_2026.txt",
-    "category": "finance"
-  },
-  {
-    "id": 9,
-    "query": "virtual smart collections zero disk risk",
-    "expected_file": "meeting_agenda_q3.md",
-    "category": "planning"
-  },
-  {
-    "id": 10,
-    "query": "vector scale labs experience computer science",
-    "expected_file": "resume_software_engineer.txt",
-    "category": "career"
-  }
+  { "id": 1, "query": "matrix decomposition linear system solver", "expected_file": "linear_algebra_solver.py", "category": "code" },
+  { "id": 2, "query": "gpu compute instance cloud invoice billing", "expected_file": "tax_invoice_2026.txt", "category": "finance" },
+  { "id": 3, "query": "qubit superposition state vectors hadamard gate", "expected_file": "quantum_computing_notes.md", "category": "academic" },
+  { "id": 4, "query": "senior systems architect software engineer resume", "expected_file": "resume_software_engineer.txt", "category": "career" },
+  { "id": 5, "query": "product architecture meeting agenda action items", "expected_file": "meeting_agenda_q3.md", "category": "planning" },
+  { "id": 6, "query": "gaussian elimination partial pivoting python", "expected_file": "linear_algebra_solver.py", "category": "code" },
+  { "id": 7, "query": "shor 9 qubit quantum error correction", "expected_file": "quantum_computing_notes.md", "category": "academic" },
+  { "id": 8, "query": "nvme vector storage buffer total price", "expected_file": "tax_invoice_2026.txt", "category": "finance" },
+  { "id": 9, "query": "virtual smart collections zero disk risk", "expected_file": "meeting_agenda_q3.md", "category": "planning" },
+  { "id": 10, "query": "vector scale labs experience computer science", "expected_file": "resume_software_engineer.txt", "category": "career" },
+  { "id": 11, "query": "postgresql database schema create table vector embeddings", "expected_file": "database_schema.sql", "category": "database" },
+  { "id": 12, "query": "uuid primary key default gen_random_uuid sql", "expected_file": "database_schema.sql", "category": "database" },
+  { "id": 13, "query": "pgvector 384 dim vector column index", "expected_file": "database_schema.sql", "category": "database" },
+  { "id": 14, "query": "multi stage dockerfile python slim builder runner", "expected_file": "dockerfile_deployment.txt", "category": "devops" },
+  { "id": 15, "query": "healthcheck curl localhost 9876 exit", "expected_file": "dockerfile_deployment.txt", "category": "devops" },
+  { "id": 16, "query": "docker container expose daemon port 9876", "expected_file": "dockerfile_deployment.txt", "category": "devops" },
+  { "id": 17, "query": "go http api router health handler JSON response", "expected_file": "microservice_api.go", "category": "code" },
+  { "id": 18, "query": "golang listandserve port 8080 uptime seconds", "expected_file": "microservice_api.go", "category": "code" },
+  { "id": 19, "query": "http response header content type application json golang", "expected_file": "microservice_api.go", "category": "code" },
+  { "id": 20, "query": "engineering infrastructure allocated budget quarterly forecast", "expected_file": "budget_forecast_2026.csv", "category": "finance" },
+  { "id": 21, "query": "research embedding models spent budget variance USD", "expected_file": "budget_forecast_2026.csv", "category": "finance" },
+  { "id": 22, "query": "cloud servers security audit UX research budget allocation", "expected_file": "budget_forecast_2026.csv", "category": "finance" },
+  { "id": 23, "query": "scaled dot product attention softmax Q K V equation", "expected_file": "machine_learning_paper.md", "category": "academic" },
+  { "id": 24, "query": "transformer self attention multi head representation subspaces", "expected_file": "machine_learning_paper.md", "category": "academic" },
+  { "id": 25, "query": "attention is all you need deep dive abstract", "expected_file": "machine_learning_paper.md", "category": "academic" },
+  { "id": 26, "query": "LU decomposition matrix pivoting algorithm", "expected_file": "linear_algebra_solver.py", "category": "code" },
+  { "id": 27, "query": "tax invoice total balance due wire transfer", "expected_file": "tax_invoice_2026.txt", "category": "finance" },
+  { "id": 28, "query": "quantum phase estimation entangling gates", "expected_file": "quantum_computing_notes.md", "category": "academic" },
+  { "id": 29, "query": "lead engineer distributed systems resume skills", "expected_file": "resume_software_engineer.txt", "category": "career" },
+  { "id": 30, "query": "Q3 roadmap sprint milestones release schedule", "expected_file": "meeting_agenda_q3.md", "category": "planning" },
+  { "id": 31, "query": "foreign key constraint chunk text CASCADE", "expected_file": "database_schema.sql", "category": "database" },
+  { "id": 32, "query": "alpine linux pip install no cache dir ENV PATH", "expected_file": "dockerfile_deployment.txt", "category": "devops" },
+  { "id": 33, "query": "net http time since start time seconds golang", "expected_file": "microservice_api.go", "category": "code" },
+  { "id": 34, "query": "hardware testing department allocated budget variance", "expected_file": "budget_forecast_2026.csv", "category": "finance" },
+  { "id": 35, "query": "query key value matrix square root dk division", "expected_file": "machine_learning_paper.md", "category": "academic" },
+  { "id": 36, "query": "numerical linear algebra system of equations numpy", "expected_file": "linear_algebra_solver.py", "category": "code" },
+  { "id": 37, "query": "einstein podolsky rosen entanglement teleportation", "expected_file": "quantum_computing_notes.md", "category": "academic" },
+  { "id": 38, "query": "accounts payable vendor payment terms invoice", "expected_file": "tax_invoice_2026.txt", "category": "finance" },
+  { "id": 39, "query": "principal engineer technical leadership architecture resume", "expected_file": "resume_software_engineer.txt", "category": "career" },
+  { "id": 40, "query": "team sync status updates blockers action items", "expected_file": "meeting_agenda_q3.md", "category": "planning" }
 ]

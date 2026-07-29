@@ -21,11 +21,11 @@ class DebouncedEventHandler(FileSystemEventHandler):
     def on_any_event(self, event: FileSystemEvent) -> None:
         if event.is_directory:
             return
-        
+
         path = Path(event.src_path)
         with self.lock:
             self.events[path] = event.event_type
-            
+
             if self.timer:
                 self.timer.cancel()
             self.timer = threading.Timer(self.debounce_seconds, self.flush)
@@ -35,7 +35,7 @@ class DebouncedEventHandler(FileSystemEventHandler):
         with self.lock:
             events_to_process = self.events.copy()
             self.events.clear()
-            
+
         for path, event_type in events_to_process.items():
             try:
                 self.callback(event_type, path)

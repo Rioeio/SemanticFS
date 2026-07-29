@@ -64,7 +64,7 @@ class Config:
     @classmethod
     def _load(cls, config_path: Path | None = None) -> Config:
         path_to_load = config_path if config_path else DEFAULT_CONFIG_PATH
-        
+
         data: dict[str, Any] = {}
         if path_to_load.exists():
             with open(path_to_load, "r", encoding="utf-8") as f:
@@ -83,9 +83,9 @@ class Config:
         watch_dirs_raw = data.get("watcher", {}).get("watch_directories", [])
         if "watch_directories" in data:
             watch_dirs_raw = data["watch_directories"]
-            
+
         watch_dirs = [Path(d).expanduser() for d in watch_dirs_raw] if watch_dirs_raw else [Path("~").expanduser()]
-        
+
         inc_patterns = data.get("watcher", {}).get("include_patterns") or data.get("include_patterns") or ["*"]
         exc_patterns = data.get("watcher", {}).get("exclude_patterns") or data.get("exclude_patterns") or [".git*", "*.tmp"]
 

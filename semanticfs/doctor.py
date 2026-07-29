@@ -64,10 +64,10 @@ def run_environment_doctor():
     # 5. Core Package: PyMuPDF / docx / pptx / openpyxl
     docs_ok = True
     try:
-        import docx
-        import fitz
-        import openpyxl
-        import pptx
+        import docx  # noqa: F401
+        import fitz  # noqa: F401
+        import openpyxl  # noqa: F401
+        import pptx  # noqa: F401
     except ImportError:
         docs_ok = False
 
@@ -76,9 +76,9 @@ def run_environment_doctor():
 
     # 6. Optional Extra: Vision (torch + transformers + PIL)
     try:
-        import torch
-        import transformers
-        from PIL import Image
+        import torch  # noqa: F401
+        import transformers  # noqa: F401
+        from PIL import Image  # noqa: F401
         vis_status = "[green]✔ Installed[/green]"
         vis_note = "CLIP Vision model available (pip install -e '.[vision]')"
     except ImportError:

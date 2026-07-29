@@ -60,11 +60,16 @@ class VectorStore:
         except Exception as e:
             logger.debug(f"upsert error: {e}")
 
-    def delete(self, parent_file_id: str) -> None:
-        """Remove a file and all its chunks from the store."""
+    def delete(self, file_id: str) -> None:
+        """Remove a file or chunk from the store by ID or filepath."""
         try:
             coll = self._get_collection()
-            coll.delete(where={"filepath": parent_file_id})
+            coll.delete(ids=[file_id])
+        except Exception:
+            pass
+        try:
+            coll = self._get_collection()
+            coll.delete(where={"filepath": file_id})
         except Exception as e:
             logger.debug(f"delete error: {e}")
 
@@ -75,10 +80,10 @@ class VectorStore:
 
         sq = parse_structured_query(query_text)
         intent = detect_query_intent(sq.semantic_text)
-        
+
         if sq.min_score is not None:
             min_score_threshold = sq.min_score
-        
+
         try:
             coll = self._get_collection()
             fetch_limit = max(n_results * 8, 200)
@@ -90,7 +95,7 @@ class VectorStore:
         except Exception as e:
             logger.error(f"search error: {e}")
             return []
-        
+
         query_words = [w.lower() for w in sq.semantic_text.split() if len(w) > 2 and w.lower() not in STOPWORDS]
         grouped_results: dict[str, SearchResult] = {}
 
@@ -99,7 +104,7 @@ class VectorStore:
                 file_id = results['ids'][0][i]
                 metadata = results['metadatas'][0][i] if results['metadatas'] else {}
                 distance = results['distances'][0][i] if results['distances'] else 0.0
-                
+
                 filepath = metadata.get("filepath", "")
                 if not filepath:
                     continue
@@ -134,7 +139,7 @@ class VectorStore:
 
                 raw_vector_score = max(0.0, 1.0 - distance)
                 score = raw_vector_score
-                
+
                 # Category intent routing: boost matching filetypes
                 target_exts = sq.extensions if sq.extensions else intent.target_exts
                 if target_exts:
@@ -158,13 +163,13 @@ class VectorStore:
                         score += recency_boost
 
                 score = min(1.0, max(0.0, score))
-                
+
                 if score < min_score_threshold:
                     continue
 
                 start_line = int(metadata.get("start_line", 1))
                 end_line = int(metadata.get("end_line", 1))
-                
+
                 res = SearchResult(
                     id=file_id,
                     filename=metadata.get("filename", ""),
@@ -190,22 +195,22 @@ class VectorStore:
             data = coll.get(include=["embeddings", "metadatas"])
             if not data or not data.get("ids") or not data.get("embeddings"):
                 return []
-                
+
             ids = data["ids"]
             metadatas = data["metadatas"]
             embeddings = data["embeddings"]
-            
+
             import numpy as np
             vecs = np.array(embeddings)
             norms = np.linalg.norm(vecs, axis=1, keepdims=True)
             norms[norms == 0] = 1.0
             norm_vecs = vecs / norms
-            
+
             sim_matrix = np.dot(norm_vecs, norm_vecs.T)
-            
+
             duplicates = []
             seen_pairs = set()
-            
+
             for i in range(len(ids)):
                 for j in range(i + 1, len(ids)):
                     sim = float(sim_matrix[i, j])
@@ -216,7 +221,7 @@ class VectorStore:
                         if pair_key not in seen_pairs:
                             seen_pairs.add(pair_key)
                             duplicates.append((path1, path2, sim))
-                            
+
             duplicates.sort(key=lambda x: x[2], reverse=True)
             return duplicates[:20]
         except Exception as e:
@@ -227,15 +232,15 @@ class VectorStore:
         """Attach custom semantic tags and notes to a file's vector metadata."""
         try:
             parent_id = VectorStore.generate_id(target_filepath)
-            
+
             from semanticfs.config import Config
             from semanticfs.embedder import Embedder
             config = Config.get_instance()
             embedder = Embedder(config.embedding.model_name, config.embedding.max_tokens)
-            
+
             tag_text = f"Filename: {target_filepath.name} Path: {target_filepath.absolute()} Custom Note Tag: {tag_note}"
             emb = embedder.embed_text(tag_text)
-            
+
             metadata = {
                 "filename": target_filepath.name,
                 "filepath": str(target_filepath.absolute()),
@@ -244,7 +249,7 @@ class VectorStore:
                 "modified_at": time.time(),
                 "content_snippet": f"🏷️ Custom Tag: {tag_note}"
             }
-            
+
             self.upsert(f"{parent_id}#tag", emb, metadata)
             return True
         except Exception as e:
@@ -275,7 +280,7 @@ class VectorStore:
     def clear(self) -> None:
         """Clear all entries in collection."""
         try:
-            coll = self._get_collection()
+            self._get_collection()
             self._client.delete_collection(name=self.collection_name)
             self._collection = self._client.get_or_create_collection(name=self.collection_name)
         except Exception as e:

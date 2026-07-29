@@ -101,16 +101,16 @@ def render_table(results, selected_index: int | None = None) -> Table:
     for i, res in enumerate(results):
         score_bar = print_score_bar(res.score)
         score_pct = f"{(res.score * 100):.0f}% {score_bar}"
-        
+
         line_info = ""
         start_line = getattr(res, "start_line", 1)
         end_line = getattr(res, "end_line", 1)
         if start_line and end_line and (start_line > 1 or end_line > 1):
             line_info = f" [bold yellow]#L{start_line}-L{end_line}[/bold yellow]"
-            
+
         filename_display = f"{res.filename}{line_info}"
         snippet = str(res.metadata.get("content_snippet", res.metadata.get("context_window", "")))[:65]
-        
+
         if selected_index is not None and i == selected_index:
             table.add_row(
                 f"[bold yellow]➔ {i+1}[/bold yellow]",
@@ -135,12 +135,12 @@ def render_table_with_preview(results, selected_index: int) -> Group:
     table = render_table(results, selected_index)
     if not results or selected_index >= len(results):
         return Group(table)
-        
+
     selected_res = results[selected_index]
     filepath = Path(selected_res.filepath)
     start_line = getattr(selected_res, "start_line", 1)
     end_line = getattr(selected_res, "end_line", 1)
-    
+
     if filepath.exists() and filepath.suffix.lower() in ('.py', '.js', '.ts', '.html', '.css', '.json', '.md', '.txt', '.yaml', '.sql', '.c', '.cpp', '.rs', '.go'):
         try:
             with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
@@ -148,14 +148,14 @@ def render_table_with_preview(results, selected_index: int) -> Group:
                 start_l = max(0, start_line - 1)
                 end_l = min(len(lines), max(end_line + 5, start_l + 15))
                 snippet_lines = "".join(lines[start_l:end_l])
-                
+
                 lexer = filepath.suffix.lstrip('.') if filepath.suffix else 'text'
                 syntax = Syntax(snippet_lines, lexer, theme="monokai", line_numbers=True, start_line=start_l+1)
                 preview_panel = Panel(syntax, title=f"📄 [bold bright_cyan]Live Preview:[/bold bright_cyan] [bold yellow]{filepath.name}[/bold yellow] (Lines {start_l+1}-{end_l})", border_style="bright_magenta")
                 return Group(table, preview_panel)
         except Exception:
             pass
-            
+
     snippet = str(selected_res.metadata.get("content_snippet", "No preview snippet available"))
     preview_panel = Panel(snippet, title=f"📄 [bold bright_cyan]Match Snippet:[/bold bright_cyan] [bold yellow]{filepath.name}[/bold yellow]", border_style="cyan")
     return Group(table, preview_panel)
@@ -173,9 +173,9 @@ def interactive_select(results, query: str, open_with_code: bool = False) -> Non
 
     if os.name == 'nt':
         import msvcrt
-        
+
         console.print("\n[bold bright_cyan]⌨️ Action Shortcuts:[/bold bright_cyan] [bold green][Enter/e][/bold green] Explorer Highlight  [bold magenta][o][/bold magenta] Launch App  [bold blue][c][/bold blue] VS Code  [bold yellow][y][/bold yellow] Copy Path  [bold yellow][p][/bold yellow] Copy Snippet  [bold red][q/Esc][/bold red] Quit\n")
-        
+
         with Live(render_table_with_preview(results, selected_index), console=console, refresh_per_second=10) as live:
             while True:
                 key = msvcrt.getch()
@@ -314,14 +314,14 @@ def run_reindex():
     from semanticfs.store import VectorStore
     config = Config.get_instance()
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
-    
+
     console.print("[bold yellow]⚡ Clearing existing vector store and re-indexing all files...[/bold yellow]")
     store.clear()
-    
+
     from semanticfs.daemon import DaemonContext
     daemon_ctx = DaemonContext(config)
     daemon_ctx.initial_scan()
-    
+
     count = store.count()
     console.print(f"[bold green]✔ Re-indexing complete! {count} chunks vector-indexed.[/bold green]")
 
@@ -330,7 +330,7 @@ def search_git_commits(query: str):
     from semanticfs.config import Config
     config = Config.get_instance()
     console.print(f"[bold cyan]🔍 Searching Git commit logs for:[/bold cyan] '[bold yellow]{query}[/bold yellow]'\n")
-    
+
     found_any = False
     for watch_dir in config.watcher.watch_directories:
         git_dir = watch_dir / ".git"
@@ -392,7 +392,7 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
         sock.settimeout(2.5)
         sock.connect(("127.0.0.1", port))
         sock.sendall(json.dumps({"query": query}).encode("utf-8"))
-        
+
         data = b""
         while True:
             chunk = sock.recv(8192)
@@ -400,7 +400,7 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
                 break
             data += chunk
         sock.close()
-        
+
         res = json.loads(data.decode("utf-8"))
         return res.get("embedding")
     except Exception:
@@ -590,16 +590,16 @@ def main(
             col_query = " ".join(sub_args[2:])
             config = Config.get_instance()
             store = VectorStore(config.storage.db_path, config.storage.collection_name)
-            
+
             q_emb = query_daemon_embedding(col_query)
             if q_emb is None:
                 from semanticfs.embedder import Embedder
                 embedder = Embedder(model, config.embedding.max_tokens)
                 q_emb = embedder.embed_text(col_query)
-                
+
             results = store.search(q_emb, query_text=col_query, n_results=20)
             fps = [r.filepath for r in results]
-            
+
             if cm.create_collection(col_name, col_query, fps):
                 console.print(f"[bold green]✔ Created Virtual Collection:[/bold green] '{col_name}' ({len(fps)} virtual shortcuts)")
                 console.print("[dim]Your physical files on disk remain 100% untouched![/dim]")
@@ -699,19 +699,19 @@ def main(
         return
 
     query = " ".join(query_parts)
-    
+
     query_embedding = query_daemon_embedding(query)
     if query_embedding is None:
         from semanticfs.embedder import Embedder
         embedder = Embedder(model, config.embedding.max_tokens)
         query_embedding = embedder.embed_text(query)
-    
+
     filters = {}
     if filetype:
         filters["filetype"] = filetype if filetype.startswith(".") else f".{filetype}"
-        
+
     results = store.search(query_embedding, query_text=query, n_results=limit, filters=filters if filters else None)
-    
+
     if since:
         min_ts = parse_since(since)
         if min_ts > 0:

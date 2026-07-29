@@ -36,7 +36,7 @@ def chunk_file_content(
         ]
 
     ext = filepath.suffix.lower()
-    
+
     # 1. AST Python Function & Class Syntax Chunker
     if ext == ".py":
         try:
@@ -129,7 +129,7 @@ def chunk_file_content(
 
             overlap_line_count = min(len(current_lines), max(1, int(len(current_lines) * 0.2)))
             current_lines = current_lines[-overlap_line_count:]
-            current_word_count = sum(len(l.split()) for l in current_lines)
+            current_word_count = sum(len(line_str.split()) for line_str in current_lines)
             start_line = max(1, line_idx - overlap_line_count + 1)
 
     if current_lines and chunk_idx < max_chunks_per_file:

@@ -24,13 +24,13 @@ def extract_ocr_text(filepath: Path) -> str:
     """Extract printed text from images, receipts, screenshots, and scanned docs via OCR."""
     if not filepath.exists():
         return ""
-        
+
     ext = filepath.suffix.lower()
     if ext not in ('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp', '.pdf'):
         return ""
 
     tess_cmd = get_tesseract_cmd()
-    
+
     # Method 1: PyTesseract / Tesseract CLI
     if tess_cmd:
         try:

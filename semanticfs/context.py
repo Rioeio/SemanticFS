@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import psutil
-import pygetwindow as gw
+
+try:
+    import pygetwindow as gw
+except (ImportError, Exception):
+    gw = None
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +38,14 @@ class ContextCapture:
         """Capture current system state."""
         active_window = ""
         active_process = ""
-        try:
-            active_win = gw.getActiveWindow()
-            if active_win:
-                active_window = active_win.title
-                active_process = "unknown"
-        except Exception as e:
-            logger.debug(f"Could not get active window: {e}")
+        if gw is not None:
+            try:
+                active_win = gw.getActiveWindow()
+                if active_win:
+                    active_window = active_win.title
+                    active_process = "unknown"
+            except Exception as e:
+                logger.debug(f"Could not get active window: {e}")
 
         running = []
         try:

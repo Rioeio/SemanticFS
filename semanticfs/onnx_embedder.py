@@ -24,7 +24,7 @@ def export_onnx_model(model_name: str = "BAAI/bge-small-en-v1.5", output_dir: Pa
 
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = ORTModelForFeatureExtraction.from_pretrained(model_name, export=True)
-        
+
         model.save_pretrained(output_dir)
         tokenizer.save_pretrained(output_dir)
         logger.info(f"✔ ONNX INT8 Quantized model saved to {output_dir}")

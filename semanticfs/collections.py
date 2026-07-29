@@ -62,17 +62,18 @@ class CollectionManager:
         """Populates Windows File Explorer virtual drive with shortcut files (.url/.lnk) without moving real files."""
         try:
             VIRTUAL_DRIVE_DIR.mkdir(parents=True, exist_ok=True)
-            
+
             for col_name, data in self.collections.items():
                 col_dir = VIRTUAL_DRIVE_DIR / col_name
                 col_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 for filepath in data.get("filepaths", []):
                     target = Path(filepath)
                     if target.exists():
                         shortcut = col_dir / f"{target.name}.url"
                         if not shortcut.exists():
                             with open(shortcut, "w", encoding="utf-8") as f:
-                                f.write(f"[InternetShortcut]\nURL=file:///{str(target.absolute()).replace('\\', '/')}\n")
+                                target_url = str(target.absolute()).replace("\\", "/")
+                                f.write(f"[InternetShortcut]\nURL=file:///{target_url}\n")
         except Exception as e:
             logger.debug(f"sync_virtual_drive error: {e}")

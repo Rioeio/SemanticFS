@@ -87,14 +87,14 @@ class DaemonContext:
         try:
             chunks = self.embedder.extract_chunks(filepath)
             ctx_snapshot = self.context_capture.capture() if self.context_capture else None
-            
+
             file_size = filepath.stat().st_size if filepath.exists() else 0
-            
+
             chunk_texts = [c.text for c in chunks]
             embeddings = self.embedder.embed_batch(chunk_texts)
-            
+
             parent_id = VectorStore.generate_id(filepath)
-            
+
             for chunk, emb in zip(chunks, embeddings):
                 metadata = {
                     "filename": filepath.name,
@@ -110,10 +110,10 @@ class DaemonContext:
                     "context_window": ctx_snapshot.active_window if ctx_snapshot else "",
                     "content_snippet": chunk.text[:300].replace('\n', ' ')
                 }
-                
+
                 chunk_file_id = f"{parent_id}#chunk_{chunk.chunk_index}"
                 self.store.upsert(chunk_file_id, emb, metadata)
-                
+
             self.linker.record_access(parent_id)
         except Exception as e:
             logger.debug(f"Failed to index {filepath}: {e}")
@@ -134,13 +134,13 @@ class DaemonContext:
     def initial_scan(self) -> None:
         logger.info("Starting multi-threaded high-throughput directory scan with dynamic semantic chunking...")
         ignored_names = {'node_modules', '.git', 'venv', '__pycache__', 'dist', 'build', '.vscode', '.gemini', '.antigravity', 'AppData', 'Temp', 'LocalSettings'}
-        
+
         file_queue: list[Path] = []
         for watch_dir in self.config.watcher.watch_directories:
             if not watch_dir.exists():
                 logger.warning(f"Watch directory does not exist: {watch_dir}")
                 continue
-                
+
             logger.info(f"Collecting files from directory tree: {watch_dir}")
             for root, dirs, files in os.walk(watch_dir):
                 dirs[:] = [dr for dr in dirs if not dr.startswith('.') and dr not in ignored_names]

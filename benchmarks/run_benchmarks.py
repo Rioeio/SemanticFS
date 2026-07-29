@@ -40,12 +40,18 @@ def run_reproducible_benchmark():
             chunks = chunk_file_content(file_path, content)
             for c in chunks:
                 emb = embedder.embed_text(c.text)
-                store.add_chunk(
-                    chunk_id=c.chunk_id,
-                    filepath=str(file_path),
+                meta = {
+                    "filepath": str(file_path.absolute()),
+                    "filename": file_path.name,
+                    "start_line": c.start_line,
+                    "end_line": c.end_line,
+                    "content_snippet": c.text[:200],
+                    "filetype": file_path.suffix
+                }
+                store.upsert(
+                    file_id=c.chunk_id,
                     embedding=emb,
-                    text=c.text,
-                    metadata={"filename": file_path.name, "start_line": c.start_line, "end_line": c.end_line}
+                    metadata=meta
                 )
                 total_chunks += 1
         except Exception as e:
@@ -69,13 +75,13 @@ def run_reproducible_benchmark():
 
         t0 = time.perf_counter()
         q_emb = embedder.embed_text(query)
-        results = store.search(q_emb, query_text=query, n_results=3, min_score_threshold=0.01)
+        results = store.search(q_emb, query_text=query, n_results=3, min_score_threshold=0.0)
         t1 = time.perf_counter()
 
         latency_ms = (t1 - t0) * 1000.0
         latencies_ms.append(latency_ms)
 
-        matched_filenames = [Path(r.filepath).name for r in results]
+        matched_filenames = [r.filename if r.filename else Path(r.filepath).name for r in results]
         is_hit = expected_filename in matched_filenames[:1]
 
         if is_hit:
@@ -90,8 +96,8 @@ def run_reproducible_benchmark():
     latencies_ms.sort()
     n = len(latencies_ms)
     p50 = latencies_ms[int(n * 0.50)]
-    p95 = latencies_ms[int(n * 0.95)] if n >= 20 else latencies_ms[-1]
-    p99 = latencies_ms[int(n * 0.99)] if n >= 100 else latencies_ms[-1]
+    p95 = latencies_ms[min(int(n * 0.95), n - 1)]
+    p99 = latencies_ms[min(int(n * 0.99), n - 1)]
     mean_lat = sum(latencies_ms) / n
     acc_pct = (correct_top1 / n) * 100.0
 
