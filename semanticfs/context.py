@@ -50,12 +50,15 @@ class ContextCapture:
         running = []
         try:
             for proc in psutil.process_iter(['name']):
-                name = proc.info['name']
-                if name:
-                    for app in self.notable_apps:
-                        if app.lower() in name.lower():
-                            if name not in running:
-                                running.append(name)
+                try:
+                    name = proc.info.get('name')
+                    if name:
+                        for app in self.notable_apps:
+                            if app.lower() in name.lower():
+                                if name not in running:
+                                    running.append(name)
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, Exception):
+                    pass
         except Exception as e:
             logger.debug(f"Could not get process list: {e}")
 

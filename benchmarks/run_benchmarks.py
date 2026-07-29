@@ -25,6 +25,10 @@ def run_reproducible_benchmark():
     print("=" * 70)
 
     # Initialize isolated test vector store
+    import shutil
+    if TEST_DB_PATH.exists():
+        shutil.rmtree(TEST_DB_PATH, ignore_errors=True)
+
     store = VectorStore(db_path=TEST_DB_PATH, collection_name="benchmark_eval")
     embedder = Embedder("BAAI/bge-small-en-v1.5", 512)
 
