@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test Suite & Benchmarks (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    name: Test Suite & Benchmarks (${ { matrix.os } }, Python ${ { matrix.python-version } })
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -20,6 +20,8 @@ jobs:
       HF_HUB_DISABLE_SYMLINKS_WARNING: "1"
       TOKENIZERS_PARALLELISM: "false"
       PYTHONUNBUFFERED: "1"
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
 
     steps:
       - name: Checkout Repository
