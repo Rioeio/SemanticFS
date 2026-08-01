@@ -1,0 +1,5 @@
+Trigger CI re-run by GitHub Copilot to validate UTF-8 CI fix.
+
+This file was created to push a new commit and cause the CI workflow to run after the UTF-8 environment variables were added to .github/workflows/ci.yml.
+
+Timestamp: 2026-08-01T00:00:00Z
