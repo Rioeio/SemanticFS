@@ -56,7 +56,7 @@ jobs:
       - name: Run Mypy Type Safety Gate (Unix)
         if: runner.os != 'Windows'
         run: |
-          mypy --ignore-missing-imports --disable-error-code attr-defined --disable-error-code import-untyped semanticfs/
+          mypy --ignore-missing-imports --disable-error-code import-untyped semanticfs/
 
       - name: Run PyTest Automated Unit Tests
         run: |

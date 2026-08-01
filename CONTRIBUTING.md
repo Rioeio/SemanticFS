@@ -30,6 +30,10 @@ source venv/bin/activate
 
 # Install core package with dev and feature extras
 pip install -e ".[dev,all]"
+
+# Install pre-commit hooks for automated ruff & mypy checks
+pip install pre-commit
+pre-commit install
 ```
 
 ---

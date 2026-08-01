@@ -24,23 +24,13 @@
 ## Interactive Terminal Interface
 
 ![SemanticFS Terminal Interface](assets/demo.svg)
+*(illustrative mockup — not a live screen capture)*
 
 ---
 
-## Release Branches & Version Evolution
+## Release History & Version Comparison
 
-SemanticFS has evolved across 5 major development milestones. Each phase is preserved in a dedicated git branch for auditing and testing:
-
-| Milestone Branch | Major Features Introduced | Test Suite | Benchmark Top-1 Acc. | Code Quality | Status |
-|---|---|---|---|---|---|
-| [`v1.0-core-retrieval`](https://github.com/Rioeio/SemanticFS/tree/v1.0-core-retrieval) | BAAI/bge-small-en-v1.5 embeddings, AST code chunker | Manual CLI | 60.00% (10 queries) | Baseline | Initial Milestone |
-| [`v2.0-virtual-collections-visualizer`](https://github.com/Rioeio/SemanticFS/tree/v2.0-virtual-collections-visualizer) | Virtual Smart Collections (`sfind collection`), 3D ASCII visualizer | Manual CLI | 70.00% (10 queries) | Feature additions | Visual Milestone |
-| [`v3.0-benchmarks-storage-security`](https://github.com/Rioeio/SemanticFS/tree/v3.0-benchmarks-storage-security) | Portable eval suite (`run_benchmarks.py`), `sfind purge`, 0% network egress | Manual CLI | 80.00% (10 queries) | Security hardening | Security Milestone |
-| [`v4.0-testing-ci-docs`](https://github.com/Rioeio/SemanticFS/tree/v4.0-testing-ci-docs) | PyTest unit test suite (`tests/`), GitHub Actions CI, architecture docs | 7/7 PyTest | 100.00% (10 queries) | `--exit-zero` CI | Testing Milestone |
-| 🏆 **[`v5.0-production-release`](https://github.com/Rioeio/SemanticFS/tree/v5.0-production-release)** (**`main`**) | **Phase 9 audit fixes, 40-query eval set, terminal `demo.svg`, zero SQLite file leaks, cross-platform CI** | **9/9 Passed (100%)** | 🏆 **95.00% (38/40 queries)** | **100% Clean (0 errors)** | 🌟 **BEST RECOMMENDED** |
-
-> [!TIP]
-> **Recommended Release**: **[`v5.0-production-release`](https://github.com/Rioeio/SemanticFS/tree/v5.0-production-release)** (`main`) is the **best, most stable, and fully tested version** of SemanticFS. It includes 100% clean type safety, zero Windows file-handle leaks, 40-query benchmark evaluation, and robust GitHub Actions CI integration.
+See [VERSIONS.md](docs/VERSIONS.md) for milestone release history and version comparisons across git branches.
 
 ---
 
@@ -50,11 +40,11 @@ SemanticFS is not designed to replace instant filename indexes like Everything o
 
 | Feature / Capability | voidtools Everything | macOS Spotlight / Windows Search | VS Code Workspace Search | SemanticFS |
 |---|---|---|---|---|
-| **Sub-Millisecond Wildcard Search (`*.pdf`)** | 🥇 **Best (Instant)** | ⚡ Fast | ⚡ Fast (Open workspace) | ⚡ Fast |
-| **Conceptual Natural Language ("tax bill 2026")** | ❌ No | ⚠️ Partial (Metadata) | ❌ No | 🥇 **Best (Dense Vector AI)** |
-| **AST Code Function Chunker (`def` / `class`)** | ❌ No | ❌ No | ⚠️ Partial | 🥇 **Best (AST-Aware)** |
-| **Virtual Smart Collections (Zero Disk Risk)** | ❌ No | ⚠️ Saved Searches | ❌ No | 🥇 **Best (Explorer Shortcuts)** |
-| **Multimodal Scene & Scanned OCR Text** | ❌ No | ⚠️ PDF Text | ❌ No | 🥇 **Best (CLIP + Tesseract)** |
+| **Sub-Millisecond Wildcard Search (`*.pdf`)** | **Instant** | Fast | Fast (Open workspace) | Fast |
+| **Conceptual Natural Language ("tax bill 2026")** | No | Partial (Metadata) | No | **Dense Vector AI** |
+| **AST Code Function Chunker (`def` / `class`)** | No | No | Partial | **AST-Aware** |
+| **Virtual Smart Collections (Zero Disk Risk)** | No | Saved Searches | No | **Explorer Shortcuts** |
+| **Multimodal Scene & Scanned OCR Text** | No | PDF Text | No | **CLIP + Tesseract** |
 
 ---
 
@@ -84,6 +74,9 @@ SemanticFS is not designed to replace instant filename indexes like Everything o
 
 > [!TIP]
 > Run `sfind doctor` anytime to perform an automated environment diagnostic check of all python dependencies, system binaries, and storage path permissions!
+
+> [!NOTE]
+> Linux file-reveal (`Enter/e` key) requires an `org.freedesktop.FileManager1`-compatible file manager (e.g., GNOME Files/Nautilus); fallbacks may be needed on other desktop environments.
 
 ---
 
