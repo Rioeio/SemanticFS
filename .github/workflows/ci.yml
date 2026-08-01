@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test Suite & Benchmarks (${ { matrix.os } }, Python ${ { matrix.python-version } })
+    name: Test Suite & Benchmarks (${{ matrix.os }}, Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -46,11 +46,10 @@ jobs:
       - name: Run Mypy Type Safety Gate (Windows)
         if: runner.os == 'Windows'
         run: |
-          # Ensure Python uses UTF-8 and set console code page as a fallback
           $Env:PYTHONUTF8 = '1'
           $Env:PYTHONIOENCODING = 'utf-8'
           chcp.com 65001
-          mypy --ignore-missing-imports --disable-error-code attr-defined --disable-error-code import-untyped semanticfs/
+          mypy --ignore-missing-imports --disable-error-code import-untyped semanticfs/
         shell: pwsh
 
       - name: Run Mypy Type Safety Gate (Unix)
