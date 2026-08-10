@@ -648,7 +648,9 @@ def main(
     elif "train" in lower_args:
         print_banner()
         from semanticfs.trainer import train_local_model
-        train_local_model(epochs=1)
+        is_full = "--full" in lower_args or "-f" in lower_args
+        max_p = 500 if is_full else 40
+        train_local_model(epochs=1, max_pairs=max_p)
         return
     elif "reindex" in lower_args or "scan" in lower_args:
         run_reindex()

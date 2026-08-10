@@ -11,7 +11,7 @@ from semanticfs.store import VectorStore
 console = Console()
 logger = logging.getLogger(__name__)
 
-def train_local_model(epochs: int = 1, output_dir: Path | None = None, sample_limit: int = 500) -> Path:
+def train_local_model(epochs: int = 1, output_dir: Path | None = None, sample_limit: int = 100, max_pairs: int = 40) -> Path:
     """Fine-tunes the local sentence-transformer model on the user's indexed codebase/files."""
     import torch
     from sentence_transformers import InputExample, SentenceTransformer
@@ -50,13 +50,16 @@ def train_local_model(epochs: int = 1, output_dir: Path | None = None, sample_li
         if context:
             train_examples.append(InputExample(texts=[f"{filename} in {filepath}", context]))
 
+        if len(train_examples) >= max_pairs:
+            break
+
     if not train_examples:
         console.print("[yellow]Not enough text content extracted to train local model.[/yellow]")
         return output_dir
 
-    batch_size = 32 if device == "cuda" else 16
+    batch_size = 32 if device == "cuda" else 8
     console.print(f"[bold green]✔ Generated {len(train_examples)} local training pairs.[/bold green]")
-    console.print(f"[bold cyan]⚡ Fine-tuning '{config.embedding.model_name}' on {device.upper()} (Batch Size: {batch_size})...[/bold cyan]")
+    console.print(f"[bold cyan]⚡ Fine-tuning '{config.embedding.model_name}' on {device.upper()} (Batch Size: {batch_size}, {len(train_examples)} pairs)...[/bold cyan]")
 
     model = SentenceTransformer(config.embedding.model_name, device=device)
     train_dataloader: DataLoader = DataLoader(train_examples, shuffle=True, batch_size=batch_size)  # type: ignore[arg-type]
