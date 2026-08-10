@@ -35,13 +35,13 @@ class Embedder:
     def embed_text(self, text: str) -> list[float]:
         """Embed a single text string with LRU caching."""
         truncated = text[:self.max_tokens * 4]
-        embedding = self.model.encode(truncated)
+        embedding = self.model.encode(truncated, show_progress_bar=False)
         return embedding.tolist()
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
         """Batch embed multiple texts."""
         truncated_texts = [text[:self.max_tokens * 4] for text in texts]
-        embeddings = self.model.encode(truncated_texts)
+        embeddings = self.model.encode(truncated_texts, show_progress_bar=False)
         return embeddings.tolist()
 
     def extract_chunks(self, filepath: Path) -> list[FileChunk]:
