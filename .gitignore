@@ -34,3 +34,7 @@ semantic_drive/target/
 
 # Node (D3.js CDN, no node_modules needed)
 node_modules/
+
+# Internal planning scaffold
+antigravity-setup/
+*.docx
