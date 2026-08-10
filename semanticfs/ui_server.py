@@ -3,6 +3,7 @@ from __future__ import annotations
 import http.server
 import json
 import logging
+import os
 import socketserver
 import threading
 import urllib.parse
@@ -10,7 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from semanticfs.config import Config
-from semanticfs.linker import FileLinker
 from semanticfs.store import VectorStore
 
 logger = logging.getLogger(__name__)
@@ -347,28 +347,60 @@ class SemanticFSUIHandler(http.server.BaseHTTPRequestHandler):
         elif path == "/api/graph":
             config = Config.get_instance()
             store = VectorStore(config.storage.db_path, config.storage.collection_name)
-            linker = FileLinker(config.linker.db_path)
 
-            items = store.get_all(limit=150)
             nodes = []
             seen_ids = set()
 
-            for item in items:
-                f_id = item.get("id", item.get("filepath", ""))
-                if f_id and f_id not in seen_ids:
-                    seen_ids.add(f_id)
-                    nodes.append({
-                        "id": f_id,
-                        "filename": item.get("filename", Path(item.get("filepath", "")).name),
-                        "filepath": item.get("filepath", ""),
-                        "filetype": item.get("filetype", ""),
-                        "access_count": 1
-                    })
-
-            links: list[dict[str, Any]] = []
-            total_links = linker.get_total_links()
-            if total_links > 0:
+            try:
+                items = store.get_all(limit=150)
+                for item in items:
+                    filepath = item.get("filepath", "")
+                    filename = item.get("filename", Path(filepath).name if filepath else "")
+                    f_id = filepath or filename
+                    if f_id and f_id not in seen_ids:
+                        seen_ids.add(f_id)
+                        nodes.append({
+                            "id": f_id,
+                            "filename": filename,
+                            "filepath": filepath,
+                            "filetype": item.get("filetype", Path(filepath).suffix.lower() if filepath else ""),
+                            "access_count": 1
+                        })
+            except Exception:
                 pass
+
+            if not nodes:
+                # Instant fallback: populate from workspace watch directories
+                for wdir in config.watcher.watch_directories:
+                    if wdir.exists():
+                        for root, _, files in os.walk(wdir):
+                            for f in files[:25]:
+                                if not f.startswith('.'):
+                                    fp = str(Path(root) / f)
+                                    if fp not in seen_ids:
+                                        seen_ids.add(fp)
+                                        nodes.append({
+                                            "id": fp,
+                                            "filename": f,
+                                            "filepath": fp,
+                                            "filetype": Path(f).suffix.lower(),
+                                            "access_count": 1
+                                        })
+
+            # Create relationship links between nodes of matching directory or extension
+            links: list[dict[str, Any]] = []
+            for i in range(len(nodes)):
+                for j in range(i + 1, len(nodes)):
+                    n1 = nodes[i]
+                    n2 = nodes[j]
+                    same_ext = n1["filetype"] and n1["filetype"] == n2["filetype"]
+                    same_dir = Path(n1["filepath"]).parent == Path(n2["filepath"]).parent if n1["filepath"] and n2["filepath"] else False
+                    if same_dir or (same_ext and i % 3 == 0):
+                        links.append({
+                            "source": n1["id"],
+                            "target": n2["id"],
+                            "weight": 2.0 if same_dir else 1.0
+                        })
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json")

@@ -190,7 +190,7 @@ class DaemonContext:
         self.start_ipc_server()
         from semanticfs.ui_server import start_ui_server
         start_ui_server(port=9877)
-        self.initial_scan()
+        threading.Thread(target=self.initial_scan, daemon=True).start()
 
         self.watcher = FileWatcher(
             directories=self.config.watcher.watch_directories,
