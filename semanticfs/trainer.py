@@ -67,12 +67,17 @@ def train_local_model(epochs: int = 1, output_dir: Path | None = None, sample_li
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    model.fit(
-        train_objectives=[(train_dataloader, train_loss)],
-        epochs=epochs,
-        warmup_steps=10,
-        show_progress_bar=True
-    )
+    try:
+        model.fit(
+            train_objectives=[(train_dataloader, train_loss)],
+            epochs=epochs,
+            warmup_steps=10,
+            show_progress_bar=True
+        )
+    except ImportError as e:
+        console.print(f"[bold yellow]⚠️ Additional training dependencies required:[/bold yellow] {e}")
+        console.print("[dim]Install optional training extras with: pip install -e \".[train]\" or pip install datasets[/dim]")
+        return output_dir
 
     model.save(str(output_dir))
     console.print(f"[bold green]🎉 Local AI model successfully trained & saved to:[/bold green] {output_dir}")
