@@ -28,6 +28,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger("semanticfs")
 
+AUTH_TOKEN_PATH = Path("~/.semanticfs/auth_token").expanduser()
+
+def get_or_create_auth_token() -> str:
+    """Generate or retrieve a secure shared-secret auth token saved with 0o600 permissions."""
+    AUTH_TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if AUTH_TOKEN_PATH.exists():
+        try:
+            with open(AUTH_TOKEN_PATH, "r", encoding="utf-8") as f:
+                token = f.read().strip()
+                if token:
+                    return token
+        except Exception:
+            pass
+    import secrets
+    token = secrets.token_hex(32)
+    try:
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        mode = 0o600
+        fd = os.open(AUTH_TOKEN_PATH, flags, mode)
+        with open(fd, "w", encoding="utf-8") as f:
+            f.write(token)
+    except Exception:
+        with open(AUTH_TOKEN_PATH, "w", encoding="utf-8") as f:
+            f.write(token)
+    return token
+
 class DaemonContext:
     def __init__(self, config: Config):
         self.config = config
@@ -41,9 +67,10 @@ class DaemonContext:
         )
         self.watcher: FileWatcher | None = None
         self._running = True
+        self.auth_token = get_or_create_auth_token()
 
     def start_ipc_server(self, port: int = 9876):
-        """Pre-warmed background IPC socket server for instant sub-20ms search embeddings."""
+        """Pre-warmed background IPC socket server for instant search embeddings with token authentication."""
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -60,6 +87,10 @@ class DaemonContext:
                 data = conn.recv(8192).decode("utf-8")
                 if data:
                     req = json.loads(data)
+                    token = req.get("token", "")
+                    if token != self.auth_token:
+                        conn.sendall(json.dumps({"error": "Unauthorized: Invalid auth token"}).encode("utf-8"))
+                        return
                     query = req.get("query", "")
                     if query:
                         emb = self.embedder.embed_text(query)

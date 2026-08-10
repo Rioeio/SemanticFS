@@ -51,7 +51,8 @@ SemanticFS is not designed to replace instant filename indexes like Everything o
 ## IPC Security & Local Trust Model
 
 * **Local Loopback Socket Isolation**: The background daemon socket server listens **strictly on `127.0.0.1:9876`** (localhost loopback interface only). It does not bind to external network adapters and is inaccessible to network traffic outside your machine.
-* **Local Process Trust Model**: The IPC socket trusts local processes executing within the same OS user session. Network egress is 0.0% — zero telemetry or vector data ever leaves your computer.
+* **Shared-Secret Token Authentication**: IPC requests require a cryptographically secure 256-bit auth token stored at `~/.semanticfs/auth_token` with restrictive user-only file permissions (`0o600`). Unauthenticated socket connections are immediately rejected.
+* **Zero Network Egress**: Network egress is 0.0% — zero telemetry, index data, or query text ever leaves your local machine.
 
 ---
 
@@ -252,10 +253,10 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 
 ---
 
-## Native Rust Core Crate (`native_core/`) [Experimental / Planned Integration]
+## Native Rust Core Crate (`native_core/`) [Exploratory / Standalone Research]
 
 > [!NOTE]
-> The native Rust engine crate (`libsemanticfs`) in `native_core/` is currently experimental and standalone (`native_core/Cargo.toml`, `native_core/src/lib.rs`). Python vector search currently utilizes embedded ChromaDB; PyO3 bindings for native Rust core acceleration are planned for Phase 2.
+> The native Rust engine crate (`libsemanticfs`) in `native_core/` is currently an exploratory standalone research prototype (`native_core/Cargo.toml`, `native_core/src/lib.rs`). Python vector search utilizes embedded ChromaDB; PyO3 bindings for Rust core acceleration are exploratory and not on the committed production roadmap.
 
 ---
 

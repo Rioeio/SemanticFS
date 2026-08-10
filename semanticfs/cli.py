@@ -392,11 +392,19 @@ def parse_since(since_str: str) -> float:
 def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
     import json
     import socket
+    auth_token_file = Path("~/.semanticfs/auth_token").expanduser()
+    token = ""
+    if auth_token_file.exists():
+        try:
+            token = auth_token_file.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(2.5)
         sock.connect(("127.0.0.1", port))
-        sock.sendall(json.dumps({"query": query}).encode("utf-8"))
+        sock.sendall(json.dumps({"query": query, "token": token}).encode("utf-8"))
 
         data = b""
         while True:
