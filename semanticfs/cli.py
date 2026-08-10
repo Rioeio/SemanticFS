@@ -642,6 +642,21 @@ def main(
         else:
             console.print("[yellow]Optimum/ONNX conversion ready. Using PyTorch pre-warmed daemon.[/yellow]")
         return
+    elif "ui" in lower_args or "dashboard" in lower_args or "graph" in lower_args:
+        print_banner()
+        import webbrowser
+        from semanticfs.ui_server import start_ui_server
+        start_ui_server(port=9876)
+        url = "http://127.0.0.1:9876/ui"
+        console.print(f"[bold green]✔ Web Node Graph Dashboard active at:[/bold green] [bold cyan]{url}[/bold cyan]")
+        console.print("[dim]Opening dashboard in default web browser... Press Ctrl+C in terminal to stop server.[/dim]")
+        webbrowser.open(url)
+        return
+    elif "completion" in lower_args:
+        from semanticfs.completion import generate_completion
+        target_shell = query_parts[1] if len(query_parts) > 1 else "powershell"
+        generate_completion(target_shell)
+        return
     elif "commit" in lower_args and len(query_parts) > 1:
         search_git_commits(" ".join(query_parts[1:]))
         return

@@ -148,6 +148,11 @@ class VectorStore:
                     elif intent.intent_category:
                         score -= 0.35
 
+                if sq.semantic_text:
+                    clean_query = sq.semantic_text.strip().lower()
+                    if clean_query and ('_' in clean_query or '.' in clean_query) and (clean_query in filename_lower or clean_query in snippet_lower):
+                        score += 0.35
+
                 if query_words:
                     for word in query_words:
                         if word in filename_lower:
