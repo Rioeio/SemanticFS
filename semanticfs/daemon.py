@@ -187,8 +187,10 @@ class DaemonContext:
 
     def run(self) -> None:
         logger.info("SemanticFS Daemon initializing...")
-        self.initial_scan()
         self.start_ipc_server()
+        from semanticfs.ui_server import start_ui_server
+        start_ui_server(port=9877)
+        self.initial_scan()
 
         self.watcher = FileWatcher(
             directories=self.config.watcher.watch_directories,

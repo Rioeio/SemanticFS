@@ -405,10 +405,11 @@ class SemanticFSUIHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-def start_ui_server(port: int = 9876) -> socketserver.TCPServer | None:
+def start_ui_server(port: int = 9877) -> socketserver.TCPServer | None:
     """Start embedded UI server on background thread."""
     try:
         handler = SemanticFSUIHandler
+        socketserver.TCPServer.allow_reuse_address = True
         server = socketserver.TCPServer(("127.0.0.1", port), handler)
         t = threading.Thread(target=server.serve_forever, daemon=True)
         t.start()

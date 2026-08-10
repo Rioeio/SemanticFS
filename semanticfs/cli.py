@@ -644,13 +644,20 @@ def main(
         return
     elif "ui" in lower_args or "dashboard" in lower_args or "graph" in lower_args:
         print_banner()
+        import time
         import webbrowser
         from semanticfs.ui_server import start_ui_server
-        start_ui_server(port=9876)
-        url = "http://127.0.0.1:9876/ui"
+        srv = start_ui_server(port=9877)
+        url = "http://127.0.0.1:9877/ui"
         console.print(f"[bold green]✔ Web Node Graph Dashboard active at:[/bold green] [bold cyan]{url}[/bold cyan]")
         console.print("[dim]Opening dashboard in default web browser... Press Ctrl+C in terminal to stop server.[/dim]")
         webbrowser.open(url)
+        if srv:
+            try:
+                while True:
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Stopped Web UI Dashboard server.[/yellow]")
         return
     elif "completion" in lower_args:
         from semanticfs.completion import generate_completion
