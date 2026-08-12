@@ -4,7 +4,7 @@ Thank you for your interest in contributing to **SemanticFS**! This document pro
 
 ---
 
-## 🛠️ Development Setup
+##  Development Setup
 
 ### 1. Prerequisites
 - **Python 3.11** or higher.
@@ -38,7 +38,7 @@ pre-commit install
 
 ---
 
-## 🧪 Running Tests & Diagnostics
+## Running Tests & Diagnostics
 
 ### System Diagnostics
 Run the automated environment doctor to verify dependencies and paths:
@@ -60,7 +60,7 @@ python benchmarks/run_benchmarks.py
 
 ---
 
-## 📐 Coding Conventions & Guidelines
+##  Coding Conventions & Guidelines
 
 1. **Type Annotations**: All python modules must use `from __future__ import annotations` and explicit type hints.
 2. **Error Handling**: Non-pip optional dependencies (e.g. `tesseract`, `torch`, `transformers`) must fail gracefully with actionable advice rather than unhandled tracebacks.
@@ -68,7 +68,7 @@ python benchmarks/run_benchmarks.py
 
 ---
 
-## 📬 Submitting a Pull Request
+##  Submitting a Pull Request
 
 1. Fork the repository and create a feature branch (`git checkout -b feature/amazing-feature`).
 2. Ensure all tests (`pytest`) and diagnostics (`sfind doctor`) pass.
