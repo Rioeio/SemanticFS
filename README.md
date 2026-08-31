@@ -23,8 +23,7 @@
 
 ## Interactive Terminal Interface
 
-![SemanticFS Terminal Interface](assets/demo.svg)
-*(Terminal Interface — Rich CLI Search & Live Code Preview)*
+![SemanticFS Terminal Interface](assets/demo.png)
 
 ---
 
