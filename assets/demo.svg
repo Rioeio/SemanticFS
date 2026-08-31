@@ -6,72 +6,72 @@
   <circle cx="20" cy="18" r="6" fill="#f38ba8"/>
   <circle cx="40" cy="18" r="6" fill="#f9e2af"/>
   <circle cx="60" cy="18" r="6" fill="#a6e3a1"/>
-  <text x="460" y="23" fill="#a6adc8" font-family="'Cascadia Code', 'Fira Code', Consolas, monospace" font-size="12" text-anchor="middle">PowerShell — sfind search "gaussian matrix solver"</text>
+  <text x="460" y="23" fill="#a6adc8" font-family="'Cascadia Code', 'Fira Code', Consolas, monospace" font-size="12" text-anchor="middle">PowerShell — sfind "gaussian matrix solver"</text>
 
   <!-- Terminal Output Group -->
-  <g font-family="'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace" font-size="12.5" xml:space="preserve">
+  <g font-family="'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace" font-size="12" xml:space="preserve">
     <!-- PowerShell Prompt & Command -->
-    <text x="20" y="60" fill="#a6e3a1">PS C:\Dev\Projects\SemanticFS&gt;</text>
+    <text x="24" y="60" fill="#a6e3a1">PS C:\Dev\Projects\SemanticFS&gt;</text>
     <text x="275" y="60" fill="#f5e0dc"> sfind "gaussian matrix solver"</text>
 
     <!-- ASCII Banner -->
-    <text x="20" y="85" fill="#89dceb">   /\_/\        <tspan fill="#cba6f7">_____                           _   _      ______  _____</tspan></text>
-    <text x="20" y="100" fill="#89dceb">  ( o.o )     <tspan fill="#cba6f7">/ ____|                         | | (_)    |  ____|/ ____|</tspan></text>
-    <text x="20" y="115" fill="#89dceb">   &gt; ^ &lt;     <tspan fill="#cba6f7">| (___   ___ _ __ ___   __ _ _ __| |_ _  ___| |__  | (___  </tspan></text>
-    <text x="20" y="130" fill="#89dceb">  /     \     <tspan fill="#cba6f7">\___ \ / _ \ '_ ` _ \ / _` | '__| __| |/ __|  __|  \___ \ </tspan></text>
-    <text x="20" y="145" fill="#89dceb"> (       )    <tspan fill="#cba6f7">____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |</tspan></text>
-    <text x="20" y="160" fill="#89dceb">  `-----'    <tspan fill="#cba6f7">|_____/ \___|_| |_| |_|\__,_|_|   \__|_|\___|_|    |_____/</tspan></text>
-    <text x="160" y="178" fill="#a6e3a1">● Local Neural Engine  <tspan fill="#f9e2af">● Sub-5ms IPC</tspan>  <tspan fill="#89b4fa">● v0.1.0</tspan></text>
+    <text x="24" y="84" fill="#89dceb">   /\_/\        <tspan fill="#cba6f7">_____                           _   _      ______  _____</tspan></text>
+    <text x="24" y="99" fill="#89dceb">  ( o.o )     <tspan fill="#cba6f7">/ ____|                         | | (_)    |  ____|/ ____|</tspan></text>
+    <text x="24" y="114" fill="#89dceb">   &gt; ^ &lt;     <tspan fill="#cba6f7">| (___   ___ _ __ ___   __ _ _ __| |_ _  ___| |__  | (___  </tspan></text>
+    <text x="24" y="129" fill="#89dceb">  /     \     <tspan fill="#cba6f7">\___ \ / _ \ '_ ` _ \ / _` | '__| __| |/ __|  __|  \___ \ </tspan></text>
+    <text x="24" y="144" fill="#89dceb"> (       )    <tspan fill="#cba6f7">____) |  __/ | | | | | (_| | |  | |_| | (__| |     ____) |</tspan></text>
+    <text x="24" y="159" fill="#89dceb">  `-----'    <tspan fill="#cba6f7">|_____/ \___|_| |_| |_|\__,_|_|   \__|_|\___|_|    |_____/</tspan></text>
+    <text x="160" y="177" fill="#a6e3a1">● Local Neural Engine  <tspan fill="#f9e2af">● Sub-5ms IPC</tspan>  <tspan fill="#89b4fa">● v0.1.0</tspan></text>
 
     <!-- Results Table Panel -->
-    <rect x="20" y="196" width="880" height="175" rx="6" fill="#11111b" stroke="#313244" stroke-width="1"/>
+    <rect x="24" y="194" width="872" height="178" rx="6" fill="#11111b" stroke="#313244" stroke-width="1"/>
     
     <!-- Table Column Headers -->
-    <text x="35" y="218" fill="#89dceb" font-weight="bold">#</text>
-    <text x="75" y="218" fill="#89dceb" font-weight="bold">Score</text>
-    <text x="175" y="218" fill="#89dceb" font-weight="bold">File Name</text>
-    <text x="360" y="218" fill="#89dceb" font-weight="bold">Path</text>
-    <text x="640" y="218" fill="#89dceb" font-weight="bold">Content Snippet</text>
+    <text x="40" y="216" fill="#89dceb" font-weight="bold">#</text>
+    <text x="75" y="216" fill="#89dceb" font-weight="bold">Score</text>
+    <text x="210" y="216" fill="#89dceb" font-weight="bold">File Name</text>
+    <text x="410" y="216" fill="#89dceb" font-weight="bold">Path</text>
+    <text x="670" y="216" fill="#89dceb" font-weight="bold">Content Snippet</text>
 
-    <!-- Row 1 (Selected) -->
-    <rect x="26" y="228" width="868" height="32" rx="4" fill="#313244"/>
-    <text x="35" y="249" fill="#f9e2af" font-weight="bold">➔ 1</text>
-    <text x="75" y="249" fill="#a6e3a1" font-weight="bold">95% [█████████░]</text>
-    <text x="175" y="249" fill="#89b4fa" font-weight="bold">linear_algebra_solver.py</text>
-    <text x="360" y="249" fill="#a6adc8">benchmarks/fixtures/linear_...</text>
-    <text x="640" y="249" fill="#f5c2e7">def gaussian_elimination(A, b):</text>
+    <!-- Row 1 (Selected Highlight) -->
+    <rect x="30" y="226" width="860" height="30" rx="4" fill="#313244"/>
+    <text x="40" y="246" fill="#f9e2af" font-weight="bold">➔ 1</text>
+    <text x="75" y="246" fill="#a6e3a1" font-weight="bold">95% [█████████░]</text>
+    <text x="210" y="246" fill="#89b4fa" font-weight="bold">linear_algebra_solver.py</text>
+    <text x="410" y="246" fill="#a6adc8">benchmarks/fixtures/...</text>
+    <text x="670" y="246" fill="#f5c2e7">def gaussian_elimination(A, b):</text>
 
     <!-- Row 2 -->
-    <text x="35" y="280" fill="#6c7086">  2</text>
-    <text x="75" y="280" fill="#f9e2af">82% [████████░░]</text>
-    <text x="175" y="280" fill="#cdd6f4">database_schema.sql</text>
-    <text x="360" y="280" fill="#6c7086">benchmarks/fixtures/database...</text>
-    <text x="640" y="280" fill="#a6adc8">CREATE TABLE vector_store_documents...</text>
+    <text x="40" y="278" fill="#6c7086">  2</text>
+    <text x="75" y="278" fill="#f9e2af">82% [████████░░]</text>
+    <text x="210" y="278" fill="#cdd6f4">database_schema.sql</text>
+    <text x="410" y="278" fill="#6c7086">benchmarks/fixtures/...</text>
+    <text x="670" y="278" fill="#a6adc8">CREATE TABLE vector_store...</text>
 
     <!-- Row 3 -->
-    <text x="35" y="308" fill="#6c7086">  3</text>
+    <text x="40" y="308" fill="#6c7086">  3</text>
     <text x="75" y="308" fill="#6c7086">74% [███████░░░]</text>
-    <text x="175" y="308" fill="#cdd6f4">microservice_api.go</text>
-    <text x="360" y="308" fill="#6c7086">benchmarks/fixtures/microse...</text>
-    <text x="640" y="308" fill="#a6adc8">func handleSolveMatrix(w http...</text>
+    <text x="210" y="308" fill="#cdd6f4">microservice_api.go</text>
+    <text x="410" y="308" fill="#6c7086">benchmarks/fixtures/...</text>
+    <text x="670" y="308" fill="#a6adc8">func handleSolveMatrix(w...</text>
 
     <!-- Row 4 -->
-    <text x="35" y="336" fill="#6c7086">  4</text>
-    <text x="75" y="336" fill="#6c7086">68% [██████░░░░]</text>
-    <text x="175" y="336" fill="#cdd6f4">machine_learning_paper.md</text>
-    <text x="360" y="336" fill="#6c7086">benchmarks/fixtures/machine...</text>
-    <text x="640" y="336" fill="#a6adc8">## 3. Matrix Linear Systems</text>
+    <text x="40" y="338" fill="#6c7086">  4</text>
+    <text x="75" y="338" fill="#6c7086">68% [██████░░░░]</text>
+    <text x="210" y="338" fill="#cdd6f4">machine_learning_paper.md</text>
+    <text x="410" y="338" fill="#6c7086">benchmarks/fixtures/...</text>
+    <text x="670" y="338" fill="#a6adc8">## 3. Matrix Linear Systems</text>
 
     <!-- Code Preview Panel -->
-    <rect x="20" y="380" width="880" height="115" rx="6" fill="#11111b" stroke="#89b4fa" stroke-width="1"/>
-    <text x="35" y="402" fill="#89b4fa" font-weight="bold">📖 Code Preview — linear_algebra_solver.py (Lines 12–22)</text>
-    <text x="35" y="425" fill="#f38ba8">def </text><tspan fill="#cba6f7">gaussian_elimination</tspan><tspan fill="#cdd6f4">(A: np.ndarray, b: np.ndarray) -&gt; np.ndarray:</tspan>
-    <text x="55" y="445" fill="#6c7086">    """Solves system of linear equations Ax = b via partial pivoting."""</text>
-    <text x="55" y="465" fill="#cdd6f4">    n = len(b)</text>
-    <text x="55" y="482" fill="#f38ba8">    for </text><tspan fill="#cdd6f4">i </tspan><tspan fill="#f38ba8">in </tspan><tspan fill="#cdd6f4">range(n): pivot = np.argmax(np.abs(A[i:, i])) + i</tspan>
+    <rect x="24" y="380" width="872" height="116" rx="6" fill="#11111b" stroke="#89b4fa" stroke-width="1"/>
+    <text x="40" y="402" fill="#89b4fa" font-weight="bold">📖 Code Preview — linear_algebra_solver.py (Lines 12–22)</text>
+    <text x="40" y="425" fill="#f38ba8">def </text><tspan fill="#cba6f7">gaussian_elimination</tspan><tspan fill="#cdd6f4">(A: np.ndarray, b: np.ndarray) -&gt; np.ndarray:</tspan>
+    <text x="60" y="445" fill="#6c7086">    """Solves system of linear equations Ax = b via partial pivoting."""</text>
+    <text x="60" y="465" fill="#cdd6f4">    n = len(b)</text>
+    <text x="60" y="483" fill="#f38ba8">    for </text><tspan fill="#cdd6f4">i </tspan><tspan fill="#f38ba8">in </tspan><tspan fill="#cdd6f4">range(n): pivot = np.argmax(np.abs(A[i:, i])) + i</tspan>
 
     <!-- Footer Action Bar -->
-    <rect x="20" y="502" width="880" height="26" rx="4" fill="#181825"/>
+    <rect x="24" y="502" width="872" height="26" rx="4" fill="#181825"/>
     <text x="460" y="519" fill="#a6e3a1" text-anchor="middle" font-size="11.5">[Enter/e] Open File  |  [c] Open in VS Code  |  [y] Copy Path  |  [q] Exit</text>
   </g>
 </svg>
