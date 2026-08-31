@@ -23,7 +23,7 @@
 
 ## Interactive Terminal Interface
 
-![SemanticFS Terminal Interface](assets/demo.png)
+![SemanticFS Terminal Interface](assets/terminal_demo.png)
 
 ---
 
