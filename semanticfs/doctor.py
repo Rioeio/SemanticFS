@@ -13,7 +13,7 @@ import socket
 
 console = Console()
 
-def is_daemon_reachable(port: int = 9876, host: str = "127.0.0.1", timeout: float = 0.8) -> bool:
+def is_daemon_reachable(port: int = 9876, host: str = "127.0.0.1", timeout: float = 0.2) -> bool:
     """Check whether the background daemon IPC server is reachable on the specified port."""
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
