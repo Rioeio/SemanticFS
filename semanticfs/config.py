@@ -24,12 +24,23 @@ class StorageConfig:
 class ContextConfig:
     enabled: bool = True
 
+DEFAULT_WATCH_DIRS = [
+    Path("~/Documents").expanduser(),
+    Path("~/Desktop").expanduser(),
+    Path("~/Downloads").expanduser(),
+    Path("~/Pictures").expanduser(),
+    Path("~/Videos").expanduser(),
+    Path("~/Music").expanduser(),
+    Path("~/Dev").expanduser(),
+]
+
 @dataclass
 class WatcherConfig:
-    watch_directories: list[Path] = field(default_factory=lambda: [Path("~").expanduser()])
+    watch_directories: list[Path] = field(default_factory=lambda: list(DEFAULT_WATCH_DIRS))
     include_patterns: list[str] = field(default_factory=lambda: ["*"])
     exclude_patterns: list[str] = field(default_factory=lambda: [".git*", "*.tmp"])
-    max_file_size: int = 10 * 1024 * 1024  # 10 MB
+    max_file_size: int = 50 * 1024 * 1024  # 50 MB
+    max_file_size_mb: int = 50
     debounce_ms: int = 500
 
 @dataclass
@@ -84,10 +95,21 @@ class Config:
         if "watch_directories" in data:
             watch_dirs_raw = data["watch_directories"]
 
-        watch_dirs = [Path(d).expanduser() for d in watch_dirs_raw] if watch_dirs_raw else [Path("~").expanduser()]
+        watch_dirs = [Path(d).expanduser() for d in watch_dirs_raw] if watch_dirs_raw else list(DEFAULT_WATCH_DIRS)
 
         inc_patterns = data.get("watcher", {}).get("include_patterns") or data.get("include_patterns") or ["*"]
         exc_patterns = data.get("watcher", {}).get("exclude_patterns") or data.get("exclude_patterns") or [".git*", "*.tmp"]
+
+        max_mb = data.get("watcher", {}).get("max_file_size_mb")
+        if max_mb is None and "max_file_size_mb" in data:
+            max_mb = data["max_file_size_mb"]
+
+        if max_mb is not None:
+            max_file_size_mb_val = int(max_mb)
+            max_file_size_bytes = max_file_size_mb_val * 1024 * 1024
+        else:
+            max_file_size_bytes = get_env_or_dict("watcher", "max_file_size", 50 * 1024 * 1024, int)
+            max_file_size_mb_val = get_env_or_dict("watcher", "max_file_size_mb", max_file_size_bytes // (1024 * 1024), int)
 
         cfg = cls(
             embedding=EmbeddingConfig(
@@ -106,7 +128,8 @@ class Config:
                 watch_directories=watch_dirs,
                 include_patterns=inc_patterns,
                 exclude_patterns=exc_patterns,
-                max_file_size=get_env_or_dict("watcher", "max_file_size", 10 * 1024 * 1024, int),
+                max_file_size=max_file_size_bytes,
+                max_file_size_mb=max_file_size_mb_val,
                 debounce_ms=get_env_or_dict("watcher", "debounce_ms", 500, int),
             ),
             server=ServerConfig(
@@ -142,7 +165,7 @@ class Config:
             },
             "watcher": {
                 "debounce_ms": self.watcher.debounce_ms,
-                "max_file_size": self.watcher.max_file_size,
+                "max_file_size_mb": self.watcher.max_file_size_mb,
             },
             "server": {
                 "host": self.server.host,

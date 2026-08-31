@@ -261,11 +261,28 @@ class VectorStore:
             logger.debug(f"add_file_tag error: {e}")
             return False
 
+    def get_metadata(self, file_id: str) -> dict[str, Any] | None:
+        """Cheaply look up stored metadata by file ID without loading embeddings."""
+        try:
+            coll = self._get_collection()
+            results = coll.get(ids=[file_id, f"{file_id}#chunk_0"], include=["metadatas"])
+            if results and results.get("ids") and results.get("metadatas"):
+                for meta in results["metadatas"]:
+                    if meta:
+                        return meta
+        except Exception as e:
+            logger.debug(f"get_metadata error: {e}")
+        return None
+
+    def get_file_metadata(self, file_id: str) -> dict[str, Any] | None:
+        """Alias for get_metadata."""
+        return self.get_metadata(file_id)
+
     def get(self, file_id: str) -> dict[str, Any] | None:
         """Get single file metadata."""
         try:
             coll = self._get_collection()
-            results = coll.get(ids=[file_id])
+            results = coll.get(ids=[file_id], include=["metadatas"])
             if results and results['ids']:
                 return results['metadatas'][0] if results['metadatas'] else None
         except Exception as e:

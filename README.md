@@ -167,6 +167,17 @@ Or selectively install individual feature extras:
 pip install -e ".[vision,ocr]"
 ```
 
+### Persistent Background Daemon Setup (Windows)
+
+SemanticFS utilizes a pre-warmed background IPC daemon on `127.0.0.1:9876` for sub-5ms search queries. To run the daemon continuously across system reboots without keeping an open terminal window:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1
+```
+
+> [!TIP]
+> Run `sfind doctor` anytime to verify whether the daemon is actively listening on port 9876 and that all system dependencies are healthy!
+
 ---
 
 ## Structured Search Operators & Precision Guide
@@ -204,6 +215,8 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 | `sfind start` | Launch pre-warmed background IPC server & tracking daemon for sub-5ms search |
 | `sfind stop` | Stop ambient background daemon |
 | `sfind status` | Display service status and master vector analytics |
+| `sfind doctor` | Run environment diagnostics, probe daemon reachability on port 9876, and verify system binaries |
+| `powershell -File scripts/setup_startup_daemon.ps1` | Configure persistent 24/7 background daemon in Windows Startup |
 | `sfind reindex` | Force full file re-scan & dynamic vector re-indexing across all user drives |
 | `sfind add-dir <path>` | Register a new directory for background indexing |
 | `sfind list-dirs` | List all currently monitored workspace directories |

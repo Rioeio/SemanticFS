@@ -2,7 +2,13 @@
 
 # Directories to watch for user files (~ dynamically expands to user home directory on any OS)
 watch_directories:
-  - "~"
+  - "~/Documents"
+  - "~/Desktop"
+  - "~/Downloads"
+  - "~/Pictures"
+  - "~/Videos"
+  - "~/Music"
+  - "~/Dev"
 
 # File types to index
 include_patterns:

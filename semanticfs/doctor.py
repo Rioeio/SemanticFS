@@ -9,7 +9,33 @@ from pathlib import Path
 from rich.console import Console
 from rich.table import Table
 
+import socket
+
 console = Console()
+
+def is_daemon_reachable(port: int = 9876, host: str = "127.0.0.1", timeout: float = 0.8) -> bool:
+    """Check whether the background daemon IPC server is reachable on the specified port."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.settimeout(timeout)
+            return sock.connect_ex((host, port)) == 0
+    except Exception:
+        return False
+
+def is_startup_daemon_installed() -> bool:
+    """Check if the Windows Startup task / VBScript is present in the user Startup folder."""
+    if platform.system() != "Windows":
+        return False
+    try:
+        appdata = os.environ.get("APPDATA")
+        if appdata:
+            startup_folder = Path(appdata) / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        else:
+            startup_folder = Path(os.path.expanduser("~")) / "AppData" / "Roaming" / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
+        vbs_path = startup_folder / "SemanticFS_Daemon.vbs"
+        return vbs_path.exists()
+    except Exception:
+        return False
 
 def get_tesseract_path() -> str | None:
     common_win_paths = [
@@ -25,14 +51,14 @@ def get_tesseract_path() -> str | None:
 def get_cargo_path() -> str | None:
     return shutil.which("cargo")
 
-def run_environment_doctor():
-    """Runs a comprehensive diagnostic check of python packages and system-level binaries."""
+def run_environment_doctor() -> bool:
+    """Runs a comprehensive diagnostic check of python packages, background daemon, and system binaries."""
     console.print("\n🩺 [bold bright_cyan]SemanticFS System Diagnostics & Environment Doctor[/bold bright_cyan]\n")
 
     table = Table(title="Component & Dependency Status", border_style="cyan", expand=True)
-    table.add_column("Component", style="bold green", width=22)
+    table.add_column("Component", style="bold green", width=24)
     table.add_column("Type", style="bold yellow", width=12)
-    table.add_column("Status", style="bold magenta", width=14)
+    table.add_column("Status", style="bold magenta", width=16)
     table.add_column("Details & Action Items", style="white")
 
     # 1. Operating System
@@ -45,7 +71,33 @@ def run_environment_doctor():
     py_note = f"Python {py_ver} (Requires >= 3.11)"
     table.add_row("Python Version", "Runtime", py_status, py_note)
 
-    # 3. Core Package: sentence-transformers
+    # 3. Ambient Daemon & IPC Fast Path (Port 9876)
+    daemon_reachable = is_daemon_reachable(port=9876)
+    if daemon_reachable:
+        daemon_status = "[green]✔ Active[/green]"
+        daemon_note = "Listening on 127.0.0.1:9876 (Sub-5ms fast IPC search active)"
+    else:
+        daemon_status = "[bold red]✘ Offline (Fallback)[/bold red]"
+        daemon_note = (
+            "Port 9876 unreachable. CLI falling back to slow cold model load (~300-800ms). "
+            "Fix: 'sfind start' or 'powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1'"
+        )
+    table.add_row("Ambient Daemon IPC", "Daemon Service", daemon_status, daemon_note)
+
+    # 4. Windows Startup Persistence
+    if platform.system() == "Windows":
+        startup_installed = is_startup_daemon_installed()
+        if startup_installed:
+            persist_status = "[green]✔ Configured[/green]"
+            persist_note = "SemanticFS_Daemon.vbs installed in Windows Startup folder (24/7 ambient)"
+        else:
+            persist_status = "[yellow]⚪ Not Configured[/yellow]"
+            persist_note = (
+                "Not in Windows Startup. Run: powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1"
+            )
+        table.add_row("Startup Persistence", "Windows Task", persist_status, persist_note)
+
+    # 5. Core Package: sentence-transformers
     try:
         import sentence_transformers
         st_ver = getattr(sentence_transformers, "__version__", "Installed")
@@ -53,7 +105,7 @@ def run_environment_doctor():
     except ImportError:
         table.add_row("SentenceTransformers", "Core Pip", "[red]✘ Missing[/red]", "Run: pip install sentence-transformers")
 
-    # 4. Core Package: chromadb
+    # 6. Core Package: chromadb
     try:
         import chromadb
         cdb_ver = getattr(chromadb, "__version__", "Installed")
@@ -61,7 +113,7 @@ def run_environment_doctor():
     except ImportError:
         table.add_row("ChromaDB Vector Store", "Core Pip", "[red]✘ Missing[/red]", "Run: pip install chromadb")
 
-    # 5. Core Package: PyMuPDF / docx / pptx / openpyxl
+    # 7. Core Package: PyMuPDF / docx / pptx / openpyxl
     docs_ok = True
     try:
         import docx  # noqa: F401
@@ -74,7 +126,7 @@ def run_environment_doctor():
     doc_status = "[green]✔ Installed[/green]" if docs_ok else "[yellow]⚠ Partial[/yellow]"
     table.add_row("Document Extractors", "Core Pip", doc_status, "PDF, DOCX, PPTX, XLSX extractors")
 
-    # 6. Optional Extra: Vision (torch + transformers + PIL)
+    # 8. Optional Extra: Vision (torch + transformers + PIL)
     try:
         import torch  # noqa: F401
         import transformers  # noqa: F401
@@ -86,7 +138,7 @@ def run_environment_doctor():
         vis_note = "Not installed. Install extra: pip install -e '.[vision]'"
     table.add_row("CLIP Vision Extra", "Pip Extra", vis_status, vis_note)
 
-    # 7. System Binary: Tesseract OCR
+    # 9. System Binary: Tesseract OCR
     tess_path = get_tesseract_path()
     if tess_path:
         ocr_status = "[green]✔ Available[/green]"
@@ -101,7 +153,7 @@ def run_environment_doctor():
             ocr_note = "System binary missing. Install: sudo apt install tesseract-ocr"
     table.add_row("Tesseract OCR", "System Binary", ocr_status, ocr_note)
 
-    # 8. System Binary: Rust Toolchain (Cargo)
+    # 10. System Binary: Rust Toolchain (Cargo)
     cargo_path = get_cargo_path()
     if cargo_path:
         rust_status = "[green]✔ Available[/green]"
@@ -111,7 +163,7 @@ def run_environment_doctor():
         rust_note = "Not installed. Only needed for native_core standalone Rust build."
     table.add_row("Rust Toolchain", "System Binary", rust_status, rust_note)
 
-    # 9. Storage Directory Access
+    # 11. Storage Directory Access
     chroma_dir = Path("~/.semanticfs/chroma").expanduser()
     try:
         chroma_dir.mkdir(parents=True, exist_ok=True)
@@ -123,7 +175,23 @@ def run_environment_doctor():
     table.add_row("Vector Storage Dir", "FileSystem", store_status, store_note)
 
     console.print(table)
+
+    if not daemon_reachable:
+        from rich.panel import Panel
+        warn_msg = (
+            "[bold red]⚠️ Daemon is currently OFFLINE on port 9876[/bold red]\n\n"
+            "[yellow]Impact:[/yellow] CLI searches are currently falling back to cold PyTorch model loading\n"
+            "on every command invocation (~300ms–800ms latency penalty instead of sub-5ms IPC).\n\n"
+            "[bold cyan]Actionable Fix Commands:[/bold cyan]\n"
+            "  • [bold green]Start daemon for current session:[/bold green]\n"
+            "      [bold white]sfind start[/bold white]\n\n"
+            "  • [bold green]Enable persistent 24/7 background startup (Recommended):[/bold green]\n"
+            "      [bold white]powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1[/bold white]\n"
+        )
+        console.print(Panel(warn_msg, title="[bold red]Action Required: Ambient Daemon Offline[/bold red]", border_style="red"))
+
     console.print("\n[dim]Run 'sfind doctor' anytime to verify your environment.[/dim]\n")
+    return daemon_reachable
 
 if __name__ == "__main__":
     run_environment_doctor()

@@ -249,19 +249,28 @@ def start_daemon():
     PID_DIR.mkdir(parents=True, exist_ok=True)
     python_exe = sys.executable
 
-    if DAEMON_PID_FILE.exists():
-        pid = int(DAEMON_PID_FILE.read_text().strip())
-        if is_pid_running(pid):
-            console.print("[yellow]Daemon is already running in background.[/yellow]")
-            return
-        else:
-            DAEMON_PID_FILE.unlink(missing_ok=True)
+    from semanticfs.doctor import is_daemon_reachable
+    if is_daemon_reachable(9876):
+        console.print("[yellow]Daemon is already running and reachable on port 9876.[/yellow]")
+        return
 
-    proc = subprocess.Popen([python_exe, "-m", "semanticfs.daemon"], cwd="C:/Dev/SemanticFS", creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+    if DAEMON_PID_FILE.exists():
+        try:
+            pid = int(DAEMON_PID_FILE.read_text().strip())
+            if is_pid_running(pid):
+                console.print(f"[yellow]Daemon is already running in background (PID: {pid}).[/yellow]")
+                return
+        except Exception:
+            pass
+        DAEMON_PID_FILE.unlink(missing_ok=True)
+
+    repo_root = str(Path(__file__).parent.parent)
+    proc = subprocess.Popen([python_exe, "-m", "semanticfs.daemon"], cwd=repo_root, creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
     DAEMON_PID_FILE.write_text(str(proc.pid))
     console.print(f"[bold green]✔ Ambient Daemon & IPC Pre-Warmed Server started (PID: {proc.pid})[/bold green]")
 
 def stop_daemon():
+    stopped = False
     if DAEMON_PID_FILE.exists():
         try:
             pid = int(DAEMON_PID_FILE.read_text().strip())
@@ -270,16 +279,19 @@ def stop_daemon():
             else:
                 os.kill(pid, signal.SIGTERM)
             console.print(f"[bold red]✘ Stopped Ambient Daemon (PID: {pid})[/bold red]")
+            stopped = True
         except Exception as e:
-            console.print(f"[dim]Failed to stop daemon: {e}[/dim]")
+            console.print(f"[dim]Failed to stop daemon by PID: {e}[/dim]")
         finally:
             DAEMON_PID_FILE.unlink(missing_ok=True)
-    else:
-        console.print("[yellow]No running daemon found.[/yellow]")
+
+    if not stopped:
+        console.print("[yellow]No running daemon PID found.[/yellow]")
 
 def show_status_and_analytics():
     print_banner()
     from semanticfs.config import Config
+    from semanticfs.doctor import is_daemon_reachable
     from semanticfs.linker import FileLinker
     from semanticfs.store import VectorStore
 
@@ -287,8 +299,20 @@ def show_status_and_analytics():
     store = VectorStore(config.storage.db_path, config.storage.collection_name)
     linker = FileLinker(config.linker.db_path)
 
-    d_running = DAEMON_PID_FILE.exists() and is_pid_running(int(DAEMON_PID_FILE.read_text().strip()))
-    d_status = "[bold green]● RUNNING (Sub-5ms IPC Active)[/bold green]" if d_running else "[bold red]● STOPPED[/bold red]"
+    d_reachable = is_daemon_reachable(9876)
+    pid_str = ""
+    if DAEMON_PID_FILE.exists():
+        try:
+            pid = int(DAEMON_PID_FILE.read_text().strip())
+            if is_pid_running(pid):
+                pid_str = f" (PID: {pid})"
+        except Exception:
+            pass
+
+    if d_reachable:
+        d_status = f"[bold green]● RUNNING{pid_str} (Sub-5ms IPC Active on Port 9876)[/bold green]"
+    else:
+        d_status = "[bold red]● STOPPED (CLI using cold fallback path)[/bold red]"
 
     file_count = store.count()
     vector_count = file_count

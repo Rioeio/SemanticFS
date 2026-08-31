@@ -27,6 +27,23 @@ def test_store_cycle():
         assert len(results) == 1
         assert results[0].id == file_id
         
+        # Test get_metadata lookup
+        meta = store.get_metadata(file_id)
+        assert meta is not None
+        assert meta["filename"] == "test.txt"
+
+        # Test chunk_0 lookup via parent id
+        parent_id = "parent_doc"
+        store.upsert(f"{parent_id}#chunk_0", embedding, {"filename": "chunked.txt", "modified_at": 12345.0})
+        chunk_meta = store.get_metadata(parent_id)
+        assert chunk_meta is not None
+        assert chunk_meta["filename"] == "chunked.txt"
+        assert chunk_meta["modified_at"] == 12345.0
+
+        # Non-existent metadata returns None
+        assert store.get_metadata("non_existent_id") is None
+
         store.delete(file_id)
         assert store.get(file_id) is None
+        assert store.get_metadata(file_id) is None
         store.close()
