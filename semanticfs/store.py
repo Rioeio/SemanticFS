@@ -86,7 +86,7 @@ class VectorStore:
 
         try:
             coll = self._get_collection()
-            fetch_limit = max(n_results * 8, 200)
+            fetch_limit = max(n_results * 8, 40)
             results = coll.query(
                 query_embeddings=[query_embedding],
                 n_results=fetch_limit,
