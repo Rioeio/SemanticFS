@@ -24,6 +24,10 @@ class StorageConfig:
 class ContextConfig:
     enabled: bool = True
 
+@dataclass
+class UIConfig:
+    enabled: bool = False
+
 DEFAULT_WATCH_DIRS = [
     Path("~/Documents").expanduser(),
     Path("~/Desktop").expanduser(),
@@ -62,6 +66,7 @@ class Config:
     watcher: WatcherConfig = field(default_factory=WatcherConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
     linker: LinkerConfig = field(default_factory=LinkerConfig)
+    ui: UIConfig = field(default_factory=UIConfig)
 
     _instance: Config | None = None
     _config_path: Path = DEFAULT_CONFIG_PATH
@@ -140,7 +145,10 @@ class Config:
                 db_path=Path(get_env_or_dict("linker", "db_path", "~/.semanticfs/linker.db")).expanduser(),
                 co_access_window_seconds=get_env_or_dict("linker", "co_access_window_seconds", 300, int),
                 min_link_weight=get_env_or_dict("linker", "min_link_weight", 1.0, float),
-            )
+            ),
+            ui=UIConfig(
+                enabled=get_env_or_dict("ui", "enabled", False, lambda x: str(x).lower() == "true"),
+            ),
         )
         cfg._config_path = path_to_load
         return cfg
@@ -174,6 +182,9 @@ class Config:
             "linker": {
                 "co_access_window_seconds": self.linker.co_access_window_seconds,
                 "min_link_weight": self.linker.min_link_weight,
+            },
+            "ui": {
+                "enabled": self.ui.enabled,
             }
         }
         self._config_path.parent.mkdir(parents=True, exist_ok=True)

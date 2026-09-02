@@ -94,11 +94,15 @@ class Embedder:
                 for sheetname in wb.sheetnames:
                     ws = wb[sheetname]
                     lines = [f"--- Sheet: {sheetname} ---"]
+                    non_empty_count = 0
                     for row in ws.iter_rows(values_only=True):
                         row_vals = [str(val) for val in row if val is not None]
                         if row_vals:
                             lines.append(" | ".join(row_vals))
-                    sheet_texts.append("\n".join(lines[:100]))
+                            non_empty_count += 1
+                            if non_empty_count >= 100:
+                                break
+                    sheet_texts.append("\n".join(lines))
                 content = "\n\n".join(sheet_texts)
             elif ext in (".csv", ".tsv") or ext in (".ipynb", ".json", ".yaml", ".yml", ".toml", ".xml"):
                 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:

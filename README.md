@@ -224,6 +224,7 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 | Command / Option | Description |
 |---|---|
 | `sfind model` / `sfind visualize` | Launch 3D Movable "Bad Apple!!" ASCII Neural Model Visualizer in terminal |
+| `sfind ui` / `sfind dashboard` | Launch standalone Web Node Graph Dashboard (opt-in; can also be enabled in `config/default.yaml` via `ui.enabled: true`) |
 | `sfind commit <query>` | Search git commit messages across monitored repositories |
 | `sfind train` | Fine-tune local neural embedding model on your local files |
 | `sfind onnx` | Export model weights to quantized ONNX INT8 format |

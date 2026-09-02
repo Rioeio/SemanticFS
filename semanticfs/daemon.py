@@ -247,8 +247,9 @@ class DaemonContext:
             logger.debug(f"Could not write PID file: {e}")
 
         self.start_ipc_server()
-        from semanticfs.ui_server import start_ui_server
-        start_ui_server(port=9877)
+        if self.config.ui.enabled:
+            from semanticfs.ui_server import start_ui_server
+            start_ui_server(port=9877)
         threading.Thread(target=self.initial_scan, daemon=True).start()
 
         max_mb = getattr(self.config.watcher, "max_file_size_mb", None)

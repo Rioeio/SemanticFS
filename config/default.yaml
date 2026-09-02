@@ -101,3 +101,7 @@ server:
 linker:
   co_access_window_seconds: 300
   min_link_weight: 2
+
+# Web UI Dashboard settings
+ui:
+  enabled: false
