@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "pip"
 
       - name: Install Core Dependencies
         run: |
@@ -44,17 +43,7 @@ jobs:
         run: |
           ruff check semanticfs/
 
-      - name: Run Mypy Type Safety Gate (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $Env:PYTHONUTF8 = '1'
-          $Env:PYTHONIOENCODING = 'utf-8'
-          chcp.com 65001
-          mypy --ignore-missing-imports --disable-error-code import-untyped semanticfs/
-        shell: pwsh
-
-      - name: Run Mypy Type Safety Gate (Unix)
-        if: runner.os != 'Windows'
+      - name: Run Mypy Type Safety Gate
         run: |
           mypy --ignore-missing-imports --disable-error-code import-untyped semanticfs/
 
