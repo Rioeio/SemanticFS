@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import platform
 import socket
 import threading
+
+import pytest
 
 from semanticfs.doctor import (
     get_cargo_path,
@@ -43,6 +46,7 @@ def test_daemon_reachable_online():
         srv.close()
 
 
+@pytest.mark.skipif(platform.system() != "Windows", reason="Windows startup daemon is only relevant on Windows")
 def test_is_startup_daemon_installed(tmp_path, monkeypatch):
     monkeypatch.setenv("APPDATA", str(tmp_path))
     startup_dir = tmp_path / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "Startup"
