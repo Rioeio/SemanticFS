@@ -4,6 +4,26 @@ Thank you for your interest in contributing to **SemanticFS**! This document pro
 
 ---
 
+## Project Structure
+
+```text
+SemanticFS/
+├── semanticfs/          Core Python package: CLI, daemon, embedder, API, watcher, vector store
+├── frontend/            React + TypeScript + Tailwind web UI (Vite-based SPA)
+├── tests/               PyTest unit and integration test suite
+├── benchmarks/          Portable retrieval accuracy and latency benchmark runner
+├── docs/                Extended documentation (benchmarks, roadmap, version history)
+├── scripts/             Launcher and setup scripts (launch_ui, startup daemon)
+├── assets/              Static assets (terminal demo screenshot)
+├── config/              Default YAML configuration (default.yaml)
+├── native_core/         Exploratory Rust crate (standalone research prototype)
+├── .github/             CI workflows (Python test suite + frontend build)
+├── pyproject.toml       Python package metadata, dependencies, and extras
+└── README.md            Primary project documentation
+```
+
+---
+
 ##  Development Setup
 
 ### 1. Prerequisites
