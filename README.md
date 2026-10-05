@@ -179,6 +179,47 @@ powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1
 
 ---
 
+## React Frontend Web UI (`frontend/`)
+
+SemanticFS ships a full **React + TypeScript + Tailwind CSS** single-page application in [`frontend/`](frontend/) for visual file search and system status monitoring. This is a standalone web interface — distinct from the `sfind ui` / `sfind dashboard` node-graph dashboard, which is a separate opt-in feature.
+
+### What it provides
+
+| Panel | Purpose |
+|---|---|
+| **Search Screen** | Natural-language and operator-driven file search with live result ranking, score chips, and citation highlights |
+| **Result Detail / Preview** | Syntax-highlighted code preview, file metadata chips, and action buttons for matched chunks |
+| **Status Panel** | Real-time daemon health, index statistics, watched directories, and system diagnostics |
+
+### How it works
+
+The frontend talks exclusively to the **FastAPI HTTP layer** defined in [`semanticfs/api.py`](semanticfs/api.py). The API server does **not** load the embedding model itself — instead it queries the running background daemon over the IPC socket on `127.0.0.1:9876` for pre-warmed embeddings, then searches the ChromaDB vector store and returns rich results to the React client.
+
+### Launching the Web UI
+
+**Production mode** (serves the pre-built frontend bundle via the FastAPI static mount):
+
+```powershell
+# Windows PowerShell
+.\scripts\launch_ui.ps1
+
+# Windows CMD
+scripts\launch_ui.bat
+```
+
+The launcher script will auto-start the background daemon if it is not already running, then open `http://127.0.0.1:8000` in your default browser.
+
+**Development mode** (Vite HMR on port 5173 + separate API server):
+
+```powershell
+.\scripts\launch_ui.ps1 -Dev
+```
+
+> [!NOTE]
+> The React frontend is a **separate application** from the `sfind ui` / `sfind dashboard` command, which launches a standalone Web Node Graph Dashboard on port 9877. The two UIs serve different purposes and can run simultaneously.
+
+---
+
 ## Structured Search Operators & Precision Guide
 
 For pinpoint search precision, `SemanticFS` supports structured inline query operators alongside natural language:
