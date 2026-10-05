@@ -26,6 +26,10 @@ benchmarks/test_chroma/
 Thumbs.db
 .DS_Store
 
+# Linters
+.ruff_cache/
+.mypy_cache/
+
 # Rust
 semantic_drive/target/
 
