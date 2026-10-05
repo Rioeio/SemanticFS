@@ -1,0 +1,10 @@
+{
+  "description": "Enables fast, local-first semantic file search with clear file insights and privacy, designed for everyday users seeking powerful, secure search.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

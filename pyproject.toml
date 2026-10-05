@@ -29,6 +29,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ui = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
 vision = [
     "transformers>=4.40",
     "torch>=2.0",
@@ -48,6 +52,8 @@ train = [
     "accelerate>=0.30",
 ]
 all = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
     "transformers>=4.40",
     "torch>=2.0",
     "pillow>=10.0",

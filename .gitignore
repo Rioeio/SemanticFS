@@ -38,3 +38,18 @@ node_modules/
 # Internal planning scaffold
 antigravity-setup/
 *.docx
+
+# Frontend (React + Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+frontend/*.tsbuildinfo
+frontend/vite.config.*.timestamp-*
+frontend/*-debug.log*
+frontend/.env*
+frontend/.claude-replay.*
+frontend/.tmp-*
+frontend/.plugins/
+frontend/.opencode-skills/

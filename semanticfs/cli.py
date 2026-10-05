@@ -465,6 +465,7 @@ def show_main_help_menu():
 
     daemon_table.add_row("sfind start", "Launch pre-warmed background IPC server & tracking daemon for sub-5ms search")
     daemon_table.add_row("sfind stop", "Stop ambient background daemon")
+    daemon_table.add_row("sfind ui", "Launch modern Web UI & local dashboard in default browser (http://127.0.0.1:8000)")
     daemon_table.add_row("sfind status", "Display background daemon status & master index analytics")
     daemon_table.add_row("sfind doctor", "Run environment diagnostics & check system dependencies")
     daemon_table.add_row("sfind reindex", "Force full re-scan & vector re-indexing across all workspace directories")
@@ -666,7 +667,43 @@ def main(
         else:
             console.print("[yellow]Optimum/ONNX conversion ready. Using PyTorch pre-warmed daemon.[/yellow]")
         return
-    elif "ui" in lower_args or "dashboard" in lower_args or "graph" in lower_args:
+    elif "ui" in lower_args or "dashboard" in lower_args or "web" in lower_args:
+        print_banner()
+        import subprocess
+        import threading
+        import time
+        import webbrowser
+        from pathlib import Path
+
+        # If --dev flag passed, run Vite dev server directly
+        if "--dev" in lower_args:
+            frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
+            console.print("[bold green]✔ Starting Frontend Vite Dev Server...[/bold green]")
+            console.print("[dim]Running 'pnpm dev' (Press Ctrl+C to stop)[/dim]")
+            try:
+                subprocess.run(["pnpm", "dev", "--port", "5173"], cwd=str(frontend_dir), shell=True)
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Stopped Vite Dev Server.[/yellow]")
+            return
+
+        port = 8000
+        url = f"http://127.0.0.1:{port}"
+        console.print(f"[bold green]✔ SemanticFS Web Dashboard starting at:[/bold green] [bold cyan]{url}[/bold cyan]")
+        console.print("[dim]Opening dashboard in default web browser... Press Ctrl+C in terminal to stop server.[/dim]")
+
+        def _open():
+            time.sleep(1.0)
+            webbrowser.open(url)
+        threading.Thread(target=_open, daemon=True).start()
+
+        import uvicorn
+        from semanticfs.api import app
+        try:
+            uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Stopped SemanticFS Web Dashboard.[/yellow]")
+        return
+    elif "graph" in lower_args:
         print_banner()
         import time
         import webbrowser
