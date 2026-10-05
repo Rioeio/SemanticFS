@@ -218,6 +218,19 @@ The launcher script will auto-start the background daemon if it is not already r
 > [!NOTE]
 > The React frontend is a **separate application** from the `sfind ui` / `sfind dashboard` command, which launches a standalone Web Node Graph Dashboard on port 9877. The two UIs serve different purposes and can run simultaneously.
 
+### Screenshots
+
+> [!IMPORTANT]
+> **Real screenshots needed.** The placeholders below should be replaced with actual screenshots captured from the running Web UI (`scripts/launch_ui.ps1`). Save screenshots to `assets/` and update the image paths below.
+
+<!-- TODO: Replace these placeholders with real screenshots of the running frontend -->
+
+| Screen | Screenshot |
+|---|---|
+| **Search Screen** | `<!-- assets/frontend_search.png — Screenshot needed: run the frontend, perform a search, capture the results view -->` |
+| **Status Panel** | `<!-- assets/frontend_status.png — Screenshot needed: capture the status/diagnostics panel showing daemon health -->` |
+| **Result Detail** | `<!-- assets/frontend_detail.png — Screenshot needed: click a search result and capture the code preview panel -->`|
+
 ---
 
 ## Structured Search Operators & Precision Guide
