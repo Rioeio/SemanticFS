@@ -275,34 +275,71 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 
 ## Detailed System Architecture
 
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   sfind CLI                                            │
-│      (Interactive Arrow Menu / Live Monokai Code Preview / Action Keys / IPC Client)    │
-└───────────────────────────┬────────────────────────────────────────────────────────────┘
-                            │ (Sub-5ms Socket Query / IPC Port 9876)
-            ┌───────────────┴───────────────┐
-            ▼                               ▼
-  ┌───────────────────────────────────┐           ┌───────────────────────────────────┐
-  │   CORE NEURAL VECTOR ENGINE       │           │   VECTOR STORE (ChromaDB + RAM)   │
-  │   • BAAI/bge-small-en-v1.5 (384D) │ ────────► │   • 384-Dim Neural Vectors        │
-  │   • AST Syntax & Header Chunker   │           │   • Recency Boost (+0.10 Decay)   │
-  │   • Structured Query Parser       │           │   • Category Intent Boost (+0.50) │
-  └───────────────────────────────────┘           └───────────────────────────────────┘
-                    ▲                                               ▲
-                    │                                               │
-┌───────────────────┴───────────────────────────────────────────────┴───────────────────┐
-│              16-Worker ThreadPoolExecutor Parallel Ambient Daemon                      │
-│                (Multi-Threaded Scanner & File Watcher / ~/.semanticfs)                │
-└───────────────────────────┬───────────────────────────────────────────────────────────┘
-                            │
-            ┌───────────────┴───────────────┐
-            ▼                               ▼
-  ┌───────────────────────────────────┐           ┌───────────────────────────────────┐
-  │    Virtual Smart Collections      │           │   OPTIONAL FEATURE EXTRAS         │
-  │  (Zero Disk Modification Risk)    │           │   • CLIP Vision (pip install .[vision])│
-  │  • ~/.semanticfs/virtual_drive    │           │   • Tesseract OCR (pip install .[ocr]) │
-  └───────────────────────────────────┘           └───────────────────────────────────┘
+### System Architecture Diagram
+
+```mermaid
+graph TD
+    CLI["sfind CLI<br/>(cli.py — Interactive TUI)"]
+    REACT["React Frontend<br/>(frontend/ — Vite + TypeScript)"]
+    FASTAPI["FastAPI HTTP Layer<br/>(api.py — 127.0.0.1:8000)"]
+    DAEMON["Background Daemon<br/>(daemon.py)"]
+    IPC["IPC Socket Server<br/>(127.0.0.1:9876)"]
+    EMBEDDER["Embedder<br/>(BAAI/bge-small-en-v1.5)"]
+    WATCHER["FileWatcher<br/>(watcher.py — watchdog)"]
+    CHROMA["ChromaDB Vector Store<br/>(~/.semanticfs/chroma/)"]
+    LINKER["FileLinker<br/>(links.db — Co-Access Graph)"]
+
+    CLI -- "IPC Socket Query<br/>(Sub-5ms)" --> IPC
+    REACT -- "HTTP /search, /status, /stats" --> FASTAPI
+    FASTAPI -- "IPC Socket<br/>(query_daemon_embedding)" --> IPC
+    FASTAPI -- "Direct Read<br/>(VectorStore.search)" --> CHROMA
+    DAEMON --> IPC
+    DAEMON --> EMBEDDER
+    DAEMON --> WATCHER
+    DAEMON -- "store.upsert / store.delete" --> CHROMA
+    DAEMON --> LINKER
+    IPC -- "embed_text(query)" --> EMBEDDER
+
+    style CLI fill:#2563eb,color:#fff
+    style REACT fill:#2563eb,color:#fff
+    style FASTAPI fill:#7c3aed,color:#fff
+    style DAEMON fill:#059669,color:#fff
+    style CHROMA fill:#d97706,color:#fff
+```
+
+### Data Flow Diagram (Indexing & Search)
+
+```mermaid
+flowchart LR
+    subgraph INDEXING["Indexing Pipeline"]
+        direction LR
+        CHANGE["File Change Detected<br/>(watchdog Observer)"]
+        DEBOUNCE["DebouncedEventHandler<br/>(500ms debounce)"]
+        FILTER["is_file_allowed()<br/>(include/exclude patterns<br/>+ max_file_size check)"]
+        EXTRACT["Embedder.extract_chunks()"]
+        CHUNK{"File Type?"}
+        AST["ast_chunker.py<br/>(Python: def/class boundaries)"]
+        MDCHUNK["ast_chunker.py<br/>(Markdown: # header boundaries)"]
+        GENERIC["chunker.py<br/>(Overlapping word-window)"]
+        EMBED["Embedder.embed_batch()<br/>(BAAI/bge-small-en-v1.5)"]
+        STORE["VectorStore.upsert()<br/>(ChromaDB)"]
+
+        CHANGE --> DEBOUNCE --> FILTER --> EXTRACT --> CHUNK
+        CHUNK -- ".py" --> AST --> EMBED
+        CHUNK -- ".md" --> MDCHUNK --> EMBED
+        CHUNK -- "other" --> GENERIC --> EMBED
+        EMBED --> STORE
+    end
+
+    subgraph SEARCH["Search Query"]
+        direction LR
+        QUERY["User Query"]
+        QEMBED["Daemon IPC embed_text()"]
+        VSEARCH["VectorStore.search()<br/>(Cosine Similarity + Recency Boost)"]
+        RESULTS["Ranked Results"]
+
+        QUERY --> QEMBED --> VSEARCH --> RESULTS
+    end
 ```
 
 ---
