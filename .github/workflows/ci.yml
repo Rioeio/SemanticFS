@@ -54,3 +54,37 @@ jobs:
       - name: Run Portable Benchmark Suite
         run: |
           python benchmarks/run_benchmarks.py
+
+  frontend:
+    name: Frontend Lint & Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: TypeScript Type Check
+        run: pnpm exec tsc --noEmit
+
+      - name: Production Build
+        run: pnpm build
