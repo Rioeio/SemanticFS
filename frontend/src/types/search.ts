@@ -1,4 +1,4 @@
-export type MatchSource = "filename" | "body" | "ocr" | "vision";
+export type MatchSource = "filename" | "body" | "metadata" | "ocr" | "vision";
 
 export interface MatchCitation {
   term: string;
