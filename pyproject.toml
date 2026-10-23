@@ -32,6 +32,7 @@ dependencies = [
 ui = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
+    "httpx>=0.27",
 ]
 vision = [
     "transformers>=4.40",
@@ -54,6 +55,7 @@ train = [
 all = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
+    "httpx>=0.27",
     "transformers>=4.40",
     "torch>=2.0",
     "pillow>=10.0",

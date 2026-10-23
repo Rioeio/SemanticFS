@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from semanticfs.api import app
 from semanticfs.store import SearchResult
 
-client = TestClient(app)
+client = TestClient(app, base_url="http://127.0.0.1:8000")
 
 
 def test_api_health():
@@ -17,11 +17,39 @@ def test_api_health():
     assert data["service"] == "SemanticFS API"
 
 
-def test_frontend_mount():
-    res = client.get("/")
-    assert res.status_code == 200
-    # Should serve frontend index.html
-    assert "html" in res.headers.get("content-type", "").lower()
+def test_api_cors_forbidden_origin():
+    res = client.get("/health", headers={"Origin": "https://evil.example"})
+    assert "access-control-allow-origin" not in res.headers
+
+
+def test_api_trusted_host_foreign_host():
+    res = client.get("/health", headers={"Host": "evil.example"})
+    assert res.status_code == 400
+
+
+def test_frontend_mount(monkeypatch, tmp_path):
+    # 1. Fallback branch: FRONTEND_DIST does not have index.html
+    fallback_dir = tmp_path / "fallback_dist"
+    fallback_dir.mkdir()
+    monkeypatch.setattr("semanticfs.api.FRONTEND_DIST", fallback_dir)
+
+    res_fallback = client.get("/")
+    assert res_fallback.status_code == 200
+    data = res_fallback.json()
+    assert data["status"] == "ok"
+    assert "not built" in data["frontend"]
+
+    # 2. Mounted branch: FRONTEND_DIST has index.html
+    mounted_dir = tmp_path / "mounted_dist"
+    mounted_dir.mkdir()
+    index_file = mounted_dir / "index.html"
+    index_file.write_text("<!doctype html><html><body><h1>SemanticFS UI</h1></body></html>", encoding="utf-8")
+    monkeypatch.setattr("semanticfs.api.FRONTEND_DIST", mounted_dir)
+
+    res_mounted = client.get("/")
+    assert res_mounted.status_code == 200
+    assert "html" in res_mounted.headers.get("content-type", "").lower()
+    assert "SemanticFS UI" in res_mounted.text
 
 
 def test_api_status():
@@ -87,3 +115,21 @@ def test_api_search_with_mocked_daemon():
             assert first["score"] == 0.92
             assert "semantic search benchmarks" in first["snippet"]
             assert len(first["citations"]) > 0
+
+
+def test_api_reveal_not_found():
+    with patch("semanticfs.api.is_filepath_indexed", return_value=False):
+        res = client.post("/reveal", json={"filepath": "/nonexistent/path/file.py"})
+        assert res.status_code == 404
+        assert "not found in vector store" in res.json()["detail"].lower()
+
+
+def test_api_reveal_success():
+    with patch("semanticfs.api.is_filepath_indexed", return_value=True):
+        with patch("semanticfs.cli.open_path") as mock_open:
+            res = client.post("/reveal", json={"filepath": "C:/indexed/notes.md"})
+            assert res.status_code == 200
+            data = res.json()
+            assert data["status"] == "ok"
+            assert data["revealed"] == "C:/indexed/notes.md"
+            mock_open.assert_called_once_with("C:/indexed/notes.md", open_with_code=False)

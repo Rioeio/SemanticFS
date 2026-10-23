@@ -33,10 +33,11 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
   }
 
   const fullPath = `${result.folder}/${result.fileName}`;
+  const rawPath = result.filepath || fullPath;
 
   const handleCopyPath = () => {
     if (navigator?.clipboard) {
-      navigator.clipboard.writeText(fullPath);
+      navigator.clipboard.writeText(rawPath);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -44,7 +45,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
 
   const handleOpen = () => {
     if (onOpenInExplorer) {
-      onOpenInExplorer(fullPath);
+      onOpenInExplorer(rawPath);
     }
   };
 

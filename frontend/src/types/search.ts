@@ -19,6 +19,11 @@ export interface Result {
   lineCount: number;
   citations: MatchCitation[];
   fullContent: string;
+  filepath?: string;
+  filetype?: string;
+  start_line?: number;
+  end_line?: number;
+  metadata?: Record<string, any>;
   experimental?: {
     feature: "ocr" | "vision";
     label: string;

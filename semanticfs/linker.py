@@ -143,9 +143,9 @@ class FileLinker:
         try:
             with self._connect() as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT COUNT(*) FROM links')
+                cursor.execute('SELECT max(_rowid_) FROM links')
                 row = cursor.fetchone()
-                return row[0] if row else 0
+                return int(row[0]) if row and row[0] is not None else 0
         except Exception:
             return 0
 

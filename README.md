@@ -85,7 +85,7 @@ SemanticFS is not designed to replace instant filename indexes like Everything o
 ### 1. Storage Locations & Disk Formats
 All vector indices, extracted document text chunks, metadata, and virtual drive shortcuts are stored strictly within your user profile home directory (`~/.semanticfs/`):
 
-* **Master Vector Store**: `~/.semanticfs/chroma/` (Embedded SQLite database + Apache Parquet vector files).
+* **Master Vector Store**: `~/.semanticfs/chromadb/` (Embedded SQLite database + Apache Parquet vector files).
 * **Co-Access Links & Tags**: `~/.semanticfs/links.db` & `~/.semanticfs/collections.json`.
 * **Virtual Drive Shortcuts**: `~/.semanticfs/virtual_drive/` (Virtual `.url` shortcut files; zero physical files moved on disk).
 
@@ -181,7 +181,7 @@ powershell -ExecutionPolicy Bypass -File scripts/setup_startup_daemon.ps1
 
 ## React Frontend Web UI (`frontend/`)
 
-SemanticFS ships a full **React + TypeScript + Tailwind CSS** single-page application in [`frontend/`](frontend/) for visual file search and system status monitoring. This is a standalone web interface — distinct from the `sfind ui` / `sfind dashboard` node-graph dashboard, which is a separate opt-in feature.
+SemanticFS ships a full **React + TypeScript + Tailwind CSS** single-page application in [`frontend/`](frontend/) for visual file search and system status monitoring. Running `sfind ui` opens the React web UI on `http://127.0.0.1:8000`, while `sfind graph` opens the node-graph dashboard.
 
 ### What it provides
 
@@ -216,7 +216,7 @@ The launcher script will auto-start the background daemon if it is not already r
 ```
 
 > [!NOTE]
-> The React frontend is a **separate application** from the `sfind ui` / `sfind dashboard` command, which launches a standalone Web Node Graph Dashboard on port 9877. The two UIs serve different purposes and can run simultaneously.
+> `sfind ui` opens the React web UI on `http://127.0.0.1:8000`, while `sfind graph` opens the node-graph dashboard on `http://127.0.0.1:9877/ui`. Both interfaces can run simultaneously.
 
 ### Screenshots
 
@@ -278,7 +278,8 @@ For pinpoint search precision, `SemanticFS` supports structured inline query ope
 | Command / Option | Description |
 |---|---|
 | `sfind model` / `sfind visualize` | Launch 3D Movable "Bad Apple!!" ASCII Neural Model Visualizer in terminal |
-| `sfind ui` / `sfind dashboard` | Launch standalone Web Node Graph Dashboard (opt-in; can also be enabled in `config/default.yaml` via `ui.enabled: true`) |
+| `sfind ui` | Open the React web UI on `http://127.0.0.1:8000` (add `--dev` for Vite dev server on :5173) |
+| `sfind graph` | Open the Web Node Graph Dashboard on `http://127.0.0.1:9877/ui` |
 | `sfind commit <query>` | Search git commit messages across monitored repositories |
 | `sfind train` | Fine-tune local neural embedding model on your local files |
 | `sfind onnx` | Export model weights to quantized ONNX INT8 format |
@@ -299,7 +300,7 @@ graph TD
     IPC["IPC Socket Server<br/>(127.0.0.1:9876)"]
     EMBEDDER["Embedder<br/>(BAAI/bge-small-en-v1.5)"]
     WATCHER["FileWatcher<br/>(watcher.py — watchdog)"]
-    CHROMA["ChromaDB Vector Store<br/>(~/.semanticfs/chroma/)"]
+    CHROMA["ChromaDB Vector Store<br/>(~/.semanticfs/chromadb/)"]
     LINKER["FileLinker<br/>(links.db — Co-Access Graph)"]
 
     CLI -- "IPC Socket Query<br/>(Sub-5ms)" --> IPC

@@ -12,6 +12,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, Field
 
 from semanticfs.config import Config
@@ -30,19 +31,47 @@ DAEMON_IPC_PORT = 9876
 DAEMON_PID_FILE = Path("~/.semanticfs/daemon.pid").expanduser()
 AUTH_TOKEN_PATH = Path("~/.semanticfs/auth_token").expanduser()
 
+
+def get_project_version() -> str:
+    """Read canonical version directly from pyproject.toml."""
+    pyproject_path = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    if pyproject_path.exists():
+        try:
+            import tomllib
+            with open(pyproject_path, "rb") as f:
+                data = tomllib.load(f)
+                ver = data.get("project", {}).get("version")
+                if ver:
+                    return str(ver)
+        except Exception:
+            pass
+    return "0.1.0"
+
+
+API_VERSION = get_project_version()
+
 app = FastAPI(
     title="SemanticFS API",
     description="Minimal HTTP API bridging SemanticFS daemon/vector store with frontend UI.",
-    version="0.9.4",
+    version=API_VERSION,
 )
 
-# Enable CORS for React frontend (Vite dev server, local origins)
+# Enable CORS strictly for local UI origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["127.0.0.1", "localhost"],
 )
 
 
@@ -116,6 +145,44 @@ def get_dir_size_mb(path: Path) -> float:
 # ─── Request / Response Models ────────────────────────────────────────────────
 
 
+class RevealRequest(BaseModel):
+    filepath: str = Field(..., description="Absolute path of indexed file to reveal")
+
+
+def is_filepath_indexed(store: VectorStore, filepath: str) -> bool:
+    """Check if filepath is present in vector store."""
+    try:
+        sqlite_file = store.db_path / "chroma.sqlite3"
+        if sqlite_file.exists():
+            import sqlite3
+            conn = sqlite3.connect(sqlite_file, timeout=2.0)
+            cursor = conn.cursor()
+            p_win = str(Path(filepath))
+            p_posix = Path(filepath).as_posix()
+            cursor.execute(
+                "SELECT 1 FROM embedding_metadata WHERE key = 'filepath' AND string_value IN (?, ?, ?) LIMIT 1",
+                (filepath, p_win, p_posix),
+            )
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                return True
+    except Exception:
+        pass
+
+    try:
+        coll = store._get_collection()
+        candidates = {filepath, str(Path(filepath)), Path(filepath).as_posix()}
+        for c in candidates:
+            res = coll.get(where={"filepath": c}, limit=1)
+            if res and res.get("ids"):
+                return True
+    except Exception:
+        pass
+
+    return False
+
+
 class SearchRequest(BaseModel):
     query: str = Field(..., description="Natural language search query or operator expression")
     filters: dict[str, Any] | None = Field(default=None, description="Metadata filters (e.g. {'filetype': '.py'})")
@@ -164,7 +231,7 @@ def health_check() -> dict[str, Any]:
     return {
         "status": "ok",
         "service": "SemanticFS API",
-        "version": "0.9.4",
+        "version": API_VERSION,
         "daemon_reachable": is_daemon_reachable(DAEMON_IPC_PORT),
     }
 
@@ -292,6 +359,27 @@ def search(req: SearchRequest) -> SearchResponse:
     )
 
 
+@app.post("/reveal")
+def reveal_file(req: RevealRequest) -> dict[str, Any]:
+    """
+    Reveal and highlight an indexed file in the system file explorer.
+    Rejects any path not present in the vector store.
+    """
+    config = Config.get_instance()
+    store = VectorStore(config.storage.db_path, config.storage.collection_name)
+
+    if not is_filepath_indexed(store, req.filepath):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Filepath not found in vector store: {req.filepath}",
+        )
+
+    from semanticfs.cli import open_path
+    open_path(req.filepath, open_with_code=False)
+
+    return {"status": "ok", "revealed": req.filepath}
+
+
 @app.get("/status")
 def get_status() -> dict[str, Any]:
     """
@@ -406,19 +494,34 @@ def get_stats() -> dict[str, Any]:
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
-if FRONTEND_DIST.exists() and (FRONTEND_DIST / "index.html").exists():
-    from fastapi.staticfiles import StaticFiles
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIST), html=True), name="frontend")
-else:
-    @app.get("/")
-    def root_fallback() -> dict[str, Any]:
-        return {
-            "status": "ok",
-            "service": "SemanticFS API",
-            "version": "0.9.4",
-            "frontend": "not built (run 'pnpm --dir frontend build')",
-            "daemon_reachable": is_daemon_reachable(DAEMON_IPC_PORT),
-        }
+
+@app.get("/")
+def get_root():
+    """
+    Serve index.html if frontend is built; otherwise return a clear status json.
+    Dynamically checks FRONTEND_DIST so tests can safely monkeypatch without
+    relying on pre-built artifacts.
+    """
+    index_file = FRONTEND_DIST / "index.html"
+    if FRONTEND_DIST.exists() and index_file.exists():
+        from fastapi.responses import FileResponse
+        return FileResponse(index_file)
+    return {
+        "status": "ok",
+        "service": "SemanticFS API",
+        "version": API_VERSION,
+        "frontend": "not built (run 'pnpm --dir frontend build')",
+        "daemon_reachable": is_daemon_reachable(DAEMON_IPC_PORT),
+    }
+
+
+@app.get("/assets/{path:path}")
+def get_assets(path: str):
+    asset_file = FRONTEND_DIST / "assets" / path
+    if asset_file.exists() and asset_file.is_file():
+        from fastapi.responses import FileResponse
+        return FileResponse(asset_file)
+    raise HTTPException(status_code=404, detail="Asset not found")
 
 
 if __name__ == "__main__":

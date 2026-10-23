@@ -1,33 +1,50 @@
 # AGENTS.md — SemanticFS
 
-## Project
+## Project Overview
 
-SemanticFS (`sfind`) is a local, offline semantic file-search CLI + background daemon for Windows. Python core + a currently-unused Rust crate in `native_core/`. Packaging via `pyproject.toml` (setuptools). Entry points: `sfind` (CLI, `semanticfs/cli.py`), `semanticfs` (daemon, `semanticfs/daemon.py`).
+SemanticFS (`sfind`) is an ambient, local-first semantic search engine and retrieval interface for files and documents on Windows. It replaces rigid folder hierarchies with vector-based semantic retrieval, temporal co-access linking, and instant explorer navigation.
 
-Stack: `click` (CLI), `rich` (terminal UI), `sentence-transformers` + `chromadb` (embeddings/vector store), `watchdog` (file system events), `pygetwindow` (Windows window control). Optional: `transformers`/`torch` (CLIP vision), `pytesseract`/`easyocr` (OCR), `optimum` (ONNX export), `datasets`/`accelerate` (local fine-tuning via `sfind train`).
+- **Canonical Version**: `0.1.0` (declared in `pyproject.toml` and propagated to `semanticfs/api.py`, `frontend/package.json`, and `README.md`).
+- **Core Package**: `semanticfs` (`semanticfs/cli.py`, `semanticfs/daemon.py`, `semanticfs/store.py`, `semanticfs/embedder.py`, `semanticfs/api.py`).
+- **Web UI**: `frontend/` (React 19, TypeScript, Tailwind CSS v4, `@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono`, Vite).
 
-## Current known state (read before making claims in docs)
+## Key Architecture & Components
 
-- `native_core/` (Rust) is **not wired into the Python code** — `scan_and_chunk()` returns placeholder zero-vectors, nothing calls it. Treat as experimental/disconnected until a task explicitly integrates it via PyO3.
-- `vision.py`, `ocr.py`, `onnx_embedder.py`, `trainer.py` are real, working implementations already called from `embedder.py`/`cli.py` — not stubs. Their dependencies just aren't declared in `pyproject.toml` yet (see `.agents/workflows/phase-2-scope-split.md`).
-- Benchmark scripts (`tests/test_suite_100.py`, `tests/test_suite_10000_real.py`, `tests/run_drive_stress_fast.py`) are real and runnable, but their query sets are derived from the developer's own personal files/index — not portable or blind. Don't cite their output numbers as generally reproducible until `.agents/workflows/phase-1-benchmark-methodology.md` is done.
-- Windows-only today (Explorer integration, Windows Clipboard, `pygetwindow`). Don't imply cross-platform support in docs unless a task explicitly adds it.
+1. **Ambient Background Daemon (`semanticfs/daemon.py`)**:
+   - Listens on `127.0.0.1:9876` for IPC queries.
+   - Pre-warms neural embedding model (`BAAI/bge-small-en-v1.5`) in memory for sub-5ms embedding inference.
+   - Protected with token-based authentication (`~/.semanticfs/auth_token`).
+   - Monitors filesystem events via `watchdog` and maintains vector index.
 
-## Conventions
+2. **Vector Store & Association Engine**:
+   - ChromaDB persistent storage at `~/.semanticfs/chromadb/`.
+   - File linker SQLite database at `~/.semanticfs/links.db` tracking temporal co-access.
 
-- Tests use `pytest`, live in `tests/`.
-- CLI commands are added via `click` in `semanticfs/cli.py`; keep the existing operator syntax (`ext:`, `+term`, `-term`, `score:`) intact — it's covered by benchmark queries.
-- No code documentation comment blocks unless explicitly asked for — keep code clean, use docstrings only where the project already does.
-- Prefer editing `pyproject.toml`'s `[project.optional-dependencies]` over adding new top-level required dependencies.
+3. **HTTP API Server (`semanticfs/api.py`)**:
+   - FastAPI HTTP bridge for the React UI.
+   - Strictly locked down via `CORSMiddleware` (allowing only `http://127.0.0.1:8000`, `http://localhost:8000`, `http://127.0.0.1:5173`, `http://localhost:5173` with `allow_credentials=False`) and `TrustedHostMiddleware` (allowing only `127.0.0.1` and `localhost`).
+   - Endpoints: `GET /health`, `POST /search`, `POST /reveal`, `GET /status`, `GET /stats`, `GET /`, and `GET /assets/{path}`.
+   - Serves frontend static build when present, or returns graceful fallback json when not built.
 
-## Deny rules (ask before doing these, don't do them autonomously)
+4. **React Frontend (`frontend/`)**:
+   - Fully self-hosted fonts (`@fontsource-variable/inter`, `@fontsource-variable/jetbrains-mono`).
+   - Zero external CDN dependencies or tracking telemetry.
+   - Real-time search with discriminated status handling (`daemon_offline` with `sfind start` hint, `error`, `no results`).
+   - Live backend status panel polling `/status` and `/stats` every 5 seconds.
 
-- Don't delete or rewrite `tests/test_suite_100.py`, `tests/test_suite_10000_real.py`, or `tests/run_drive_stress_fast.py` outright — they contain real (if flawed) methodology; fix/replace deliberately per the Phase 1 workflow, don't just remove.
-- Don't force-push, rewrite git history, or delete branches.
-- Don't publish to PyPI or tag a release without explicit confirmation.
-- Don't modify `LICENSE` content (only verify it's present/correct).
-- Don't remove `native_core/` outright — either wire it in or clearly relabel it per Phase 0; deleting it is not one of the sanctioned options.
+## CLI & Entry Points
 
-## Workflow files
+- `sfind <query>`: Command-line semantic search with rich ranking table and interactive selection.
+- `sfind start`: Launch the background ambient daemon.
+- `sfind stop`: Terminate the running background daemon.
+- `sfind ui`: Launch the React web UI on `http://127.0.0.1:8000` (use `--dev` for Vite dev server on `:5173`).
+- `sfind graph`: Launch the standalone Web Node Graph Dashboard on `http://127.0.0.1:9877/ui`.
+- `sfind stats`: Terminal display of indexing and daemon telemetry.
+- `sfind doctor`: Diagnostic environment and dependency check.
 
-Step-by-step fix plans live in `.agents/workflows/`, one file per phase (`phase-0-credibility-fixes.md` through `phase-8-perception-positioning.md`). Work through them one at a time, in the order given in each file's context — don't combine multiple phases into a single session/Task List.
+## Verification & Quality Gates
+
+- **Backend Tests**: `pytest tests/ -v` (includes `test_api.py`, `test_store.py`, `test_embedder.py`, `test_linker.py`, etc.).
+- **Frontend Type Check**: `pnpm --dir frontend exec tsc --noEmit`
+- **Frontend Build**: `pnpm --dir frontend build`
+- **Launchers**: `scripts/launch_ui.ps1` and `scripts/launch_ui.bat` auto-check dependencies and trigger frontend builds if `dist/` is missing.

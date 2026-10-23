@@ -3,65 +3,76 @@ import { COLORS, FONTS } from "../../tokens/design-tokens";
 import { fmtNum } from "../../utils/format";
 import { PrivacyBadge } from "./PrivacyBadge";
 import { StatTile } from "./StatTile";
-import { IndexingProgress } from "./IndexingProgress";
 import { WatchedFoldersList } from "./WatchedFoldersList";
 import { OperatorsPanel, OPERATORS } from "../operators/OperatorsPanel";
-import type { WatchedFolder } from "../../types/status";
+import { fetchStatus, fetchStats } from "../../api/client";
+import type { StatusResponse, StatsResponse, WatchedFolder } from "../../types/status";
 
 export { OPERATORS };
 
-export const INITIAL_FOLDERS: WatchedFolder[] = [
-  { id: "f1", path: "~/Documents", fileCount: 1842 },
-  { id: "f2", path: "~/Projects", fileCount: 1104 },
-  { id: "f3", path: "~/Research", fileCount: 431 },
-  { id: "f4", path: "~/Desktop", fileCount: 38 },
-];
-
 export interface StatusPanelProps {
   onClose: () => void;
-  initialFolders?: WatchedFolder[];
   onSelectOperator?: (op: string) => void;
   onSelectExample?: (example: string) => void;
 }
 
 export const StatusPanel: React.FC<StatusPanelProps> = ({
   onClose,
-  initialFolders = INITIAL_FOLDERS,
   onSelectOperator,
   onSelectExample,
 }) => {
-  const TOTAL_FILES = 3800;
-  const [indexedCount, setIndexedCount] = useState(1204);
-  const [isIndexing] = useState(true);
-  const [folders, setFolders] = useState<WatchedFolder[]>(initialFolders);
+  const [statusData, setStatusData] = useState<StatusResponse | null>(null);
+  const [statsData, setStatsData] = useState<StatsResponse | null>(null);
 
-  // Simulate live indexing progress
   useEffect(() => {
-    if (!isIndexing) return;
-    const interval = setInterval(() => {
-      setIndexedCount((n) => {
-        const next = n + Math.floor(Math.random() * 7 + 2);
-        return Math.min(next, TOTAL_FILES);
-      });
-    }, 400);
-    return () => clearInterval(interval);
-  }, [isIndexing]);
+    let mounted = true;
 
-  const totalIndexed = folders.reduce((s, f) => s + f.fileCount, 0);
+    const loadData = async () => {
+      try {
+        const [status, stats] = await Promise.all([fetchStatus(), fetchStats()]);
+        if (mounted) {
+          if (status) setStatusData(status);
+          if (stats) setStatsData(stats);
+        }
+      } catch {
+        // ignore polling failures
+      }
+    };
 
-  const handleAddFolder = (path: string) => {
-    setFolders((fs) => [...fs, { id: `f${Date.now()}`, path, fileCount: 0 }]);
-  };
+    loadData();
+    const interval = setInterval(loadData, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
-  const handleEditFolder = (id: string, newPath: string) => {
-    setFolders((fs) =>
-      fs.map((f) => (f.id === id ? { ...f, path: newPath } : f))
-    );
-  };
+  const daemonStatus =
+    statusData?.daemon.status ||
+    statsData?.daemon_status ||
+    (statusData?.daemon.reachable ? "RUNNING" : "OFFLINE");
 
-  const handleRemoveFolder = (id: string) => {
-    setFolders((fs) => fs.filter((f) => f.id !== id));
-  };
+  const indexedCount =
+    statusData?.index.indexed_count ??
+    statsData?.total_files_indexed ??
+    0;
+
+  const modelName =
+    statusData?.index.model_name ||
+    statsData?.neural_vector_model ||
+    "nomic-embed-text-v1.5";
+
+  const storagePath =
+    statusData?.index.storage_path || "~/.semanticfs/chromadb";
+
+  const folders: WatchedFolder[] = statusData?.watched_directories
+    ? statusData.watched_directories.map((d) => ({
+        id: d.path,
+        path: d.path,
+        fileCount: d.shallow_file_count,
+        exists: d.exists,
+      }))
+    : [];
 
   return (
     <>
@@ -86,7 +97,7 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
           top: 0,
           right: 0,
           bottom: 0,
-          width: 360,
+          width: 380,
           background: COLORS.surface,
           borderLeft: `1px solid ${COLORS.border}`,
           zIndex: 50,
@@ -117,7 +128,7 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
               color: COLORS.textPrimary,
             }}
           >
-            Index &amp; Settings
+            Index &amp; Status
           </span>
           <button
             onClick={onClose}
@@ -157,7 +168,7 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
             padding: "20px",
             display: "flex",
             flexDirection: "column",
-            gap: 24,
+            gap: 20,
           }}
         >
           {/* Privacy badge */}
@@ -175,10 +186,10 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
                 textTransform: "uppercase",
               }}
             >
-              Index
+              System &amp; Index
             </span>
 
-            {/* Stat row */}
+            {/* Stat tiles grid */}
             <div
               style={{
                 display: "grid",
@@ -186,29 +197,31 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
                 gap: 8,
               }}
             >
-              <StatTile label="Files indexed" value={fmtNum(totalIndexed)} />
-              <StatTile label="Watched folders" value={String(folders.length)} />
+              <StatTile
+                label="Daemon"
+                value={daemonStatus}
+              />
+              <StatTile
+                label="Files indexed"
+                value={fmtNum(indexedCount)}
+              />
+              <StatTile
+                label="Watched folders"
+                value={String(folders.length)}
+              />
+              <StatTile
+                label="Model"
+                value={modelName.split("/").pop() || modelName}
+              />
             </div>
-
-            {/* Indexing progress & live daemon indicator */}
-            <IndexingProgress
-              isIndexing={isIndexing}
-              indexedCount={indexedCount}
-              totalFiles={TOTAL_FILES}
-            />
           </div>
 
-          <div style={{ height: 1, background: COLORS.border, margin: "4px 0" }} />
+          <div style={{ height: 1, background: COLORS.border, margin: "2px 0" }} />
 
           {/* Watched folders */}
-          <WatchedFoldersList
-            folders={folders}
-            onAddFolder={handleAddFolder}
-            onEditFolder={handleEditFolder}
-            onRemoveFolder={handleRemoveFolder}
-          />
+          <WatchedFoldersList folders={folders} />
 
-          <div style={{ height: 1, background: COLORS.border, margin: "4px 0" }} />
+          <div style={{ height: 1, background: COLORS.border, margin: "2px 0" }} />
 
           {/* Advanced operators panel */}
           <OperatorsPanel
@@ -225,13 +238,13 @@ export const StatusPanel: React.FC<StatusPanelProps> = ({
               fontFamily: FONTS.mono,
               fontSize: 10,
               color: COLORS.textSecondary,
-              opacity: 0.5,
+              opacity: 0.6,
               lineHeight: 1.6,
             }}
           >
-            SemanticFS v0.9.4 · nomic-embed-text-v1.5
+            SemanticFS · {modelName}
             <br />
-            index at ~/.semanticfs/index.db
+            Database: {storagePath}
           </div>
         </div>
       </div>

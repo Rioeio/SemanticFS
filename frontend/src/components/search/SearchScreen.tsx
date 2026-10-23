@@ -14,6 +14,7 @@ export interface SearchScreenProps {
   onSelectIdx: (idx: number) => void;
   latencyMs: number | null;
   isIndexing: boolean;
+  searchError?: { kind: "daemon_offline" | "error" | "network"; message: string } | null;
   onOpenSettings: () => void;
   onOpenResult: (result: Result) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -27,6 +28,7 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
   onSelectIdx,
   latencyMs,
   isIndexing,
+  searchError,
   onOpenSettings,
   onOpenResult,
   onKeyDown,
@@ -190,7 +192,132 @@ export const SearchScreen: React.FC<SearchScreenProps> = ({
               overflowY: "auto",
             }}
           >
-            {results.length === 0 ? (
+            {searchError?.kind === "daemon_offline" ? (
+              <div
+                style={{
+                  padding: "32px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: `${COLORS.warning}18`,
+                    border: `1px solid ${COLORS.warning}40`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 4,
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.warning} strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                </div>
+                <p
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                    color: COLORS.textPrimary,
+                    margin: 0,
+                    fontWeight: 500,
+                  }}
+                >
+                  Daemon offline
+                </p>
+                <p
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 12,
+                    color: COLORS.textSecondary,
+                    margin: 0,
+                    maxWidth: 440,
+                  }}
+                >
+                  {searchError.message}
+                </p>
+                <div
+                  style={{
+                    marginTop: 6,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "4px 10px",
+                    borderRadius: 6,
+                    background: COLORS.base,
+                    border: `1px solid ${COLORS.border}`,
+                    fontFamily: FONTS.mono,
+                    fontSize: 12,
+                    color: COLORS.accent,
+                  }}
+                >
+                  <span>Start daemon:</span>
+                  <code style={{ fontWeight: 600 }}>sfind start</code>
+                </div>
+              </div>
+            ) : searchError ? (
+              <div
+                style={{
+                  padding: "32px 24px",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    background: `${COLORS.danger}18`,
+                    border: `1px solid ${COLORS.danger}40`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 4,
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.danger} strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                </div>
+                <p
+                  style={{
+                    fontFamily: FONTS.sans,
+                    fontSize: 13,
+                    color: COLORS.danger,
+                    margin: 0,
+                    fontWeight: 500,
+                  }}
+                >
+                  Search error
+                </p>
+                <p
+                  style={{
+                    fontFamily: FONTS.mono,
+                    fontSize: 11,
+                    color: COLORS.textSecondary,
+                    margin: 0,
+                    maxWidth: 440,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {searchError.message}
+                </p>
+              </div>
+            ) : results.length === 0 ? (
               <EmptyState query={query} />
             ) : (
               <>
