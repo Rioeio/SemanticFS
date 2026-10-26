@@ -17,6 +17,13 @@ def test_embed_batch():
     assert len(vectors[0]) == 384
 
 
+def test_embedder_is_loaded_property():
+    embedder = Embedder()
+    assert embedder.is_loaded is False
+    _ = embedder.embed_text("test")
+    assert embedder.is_loaded is True
+
+
 def test_extract_content_xlsx_early_breakout(tmp_path):
     import openpyxl
     wb = openpyxl.Workbook()

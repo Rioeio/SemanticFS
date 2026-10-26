@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from semanticfs.api import app
@@ -78,6 +78,14 @@ def test_api_search_offline_daemon():
             res = client.post("/search", json={"query": "test query"})
             assert res.status_code == 503
             assert "Start the daemon with 'sfind start'" in res.json()["detail"]
+
+
+def test_api_search_daemon_ipc_failure_502():
+    with patch("semanticfs.api.is_daemon_reachable", return_value=True):
+        with patch("semanticfs.api.query_daemon_embedding", return_value=None):
+            res = client.post("/search", json={"query": "test query"})
+            assert res.status_code == 502
+            assert "Daemon IPC connection failed or returned an empty embedding." in res.json()["detail"]
 
 
 def test_api_search_with_mocked_daemon():

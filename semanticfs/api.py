@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import platform
 import socket
 import sys
@@ -88,7 +87,7 @@ def get_auth_token() -> str:
     return ""
 
 
-def query_daemon_embedding(query: str, port: int = DAEMON_IPC_PORT, timeout: float = 3.0) -> list[float] | None:
+def query_daemon_embedding(query: str, port: int = DAEMON_IPC_PORT, timeout: float = 10.0) -> list[float] | None:
     """
     Fetch pre-warmed vector embedding from running daemon over IPC socket.
     Does NOT load or duplicate the model inside this API process.
@@ -109,7 +108,14 @@ def query_daemon_embedding(query: str, port: int = DAEMON_IPC_PORT, timeout: flo
             data += chunk
         sock.close()
 
+        if not data:
+            logger.debug("IPC embedding query returned 0 bytes from daemon.")
+            return None
+
         res = json.loads(data.decode("utf-8"))
+        if "error" in res:
+            logger.warning(f"Daemon IPC error response: {res['error']}")
+            return None
         return res.get("embedding")
     except Exception as e:
         logger.debug(f"IPC embedding query error: {e}")

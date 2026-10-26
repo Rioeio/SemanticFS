@@ -80,8 +80,21 @@ class DaemonContext:
         self._running = True
         self.auth_token = get_or_create_auth_token()
 
+    def warmup(self) -> None:
+        """Pre-warm neural embedding model in memory for sub-5ms IPC responses."""
+        if getattr(self.embedder, "is_loaded", False):
+            return
+        logger.info("Pre-warming neural embedding model in memory...")
+        try:
+            _ = self.embedder.embed_text("semanticfs warmup")
+            logger.info("Neural embedding model pre-warmed successfully.")
+        except Exception as e:
+            logger.warning(f"Failed to pre-warm embedding model: {e}")
+
     def start_ipc_server(self, port: int = 9876):
         """Pre-warmed background IPC socket server for instant search embeddings with token authentication."""
+        if not getattr(self.embedder, "is_loaded", False):
+            self.warmup()
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -94,7 +107,7 @@ class DaemonContext:
 
         def handle_client(conn):
             try:
-                conn.settimeout(2.5)
+                conn.settimeout(15.0)
                 data = conn.recv(8192).decode("utf-8")
                 if data:
                     req = json.loads(data)
@@ -106,8 +119,14 @@ class DaemonContext:
                     if query:
                         emb = self.embedder.embed_text(query)
                         conn.sendall(json.dumps({"embedding": emb}).encode("utf-8"))
-            except Exception:
-                pass
+                    else:
+                        conn.sendall(json.dumps({"error": "Empty query"}).encode("utf-8"))
+            except Exception as e:
+                logger.debug(f"IPC client handler error: {e}")
+                try:
+                    conn.sendall(json.dumps({"error": str(e)}).encode("utf-8"))
+                except Exception:
+                    pass
             finally:
                 conn.close()
 
@@ -246,6 +265,7 @@ class DaemonContext:
         except Exception as e:
             logger.debug(f"Could not write PID file: {e}")
 
+        self.warmup()
         self.start_ipc_server()
         if self.config.ui.enabled:
             from semanticfs.ui_server import start_ui_server

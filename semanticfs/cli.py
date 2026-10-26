@@ -413,7 +413,7 @@ def parse_since(since_str: str) -> float:
         pass
     return 0.0
 
-def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
+def query_daemon_embedding(query: str, port: int = 9876, timeout: float = 10.0) -> list[float] | None:
     import json
     import socket
     auth_token_file = Path("~/.semanticfs/auth_token").expanduser()
@@ -426,7 +426,7 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
 
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(2.5)
+        sock.settimeout(timeout)
         sock.connect(("127.0.0.1", port))
         sock.sendall(json.dumps({"query": query, "token": token}).encode("utf-8"))
 
@@ -438,7 +438,12 @@ def query_daemon_embedding(query: str, port: int = 9876) -> list[float] | None:
             data += chunk
         sock.close()
 
+        if not data:
+            return None
+
         res = json.loads(data.decode("utf-8"))
+        if "error" in res:
+            return None
         return res.get("embedding")
     except Exception:
         return None
@@ -673,7 +678,6 @@ def main(
         import threading
         import time
         import webbrowser
-        from pathlib import Path
 
         # If --dev flag passed, run Vite dev server directly
         if "--dev" in lower_args:

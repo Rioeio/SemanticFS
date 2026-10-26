@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ class Embedder:
         self.model_name = model_name
         self.max_tokens = max_tokens
         self._model: Any = None
+        self._lock = threading.Lock()
 
         # Check for custom fine-tuned model
         custom_model_dir = Path("~/.semanticfs/custom_model").expanduser()
@@ -24,11 +26,18 @@ class Embedder:
             self.model_path = model_name
 
     @property
+    def is_loaded(self) -> bool:
+        """Returns True if the underlying model weights are already loaded in memory."""
+        return self._model is not None
+
+    @property
     def model(self):
         if self._model is None:
-            logger.info(f"Loading embedding model from '{self.model_path}'...")
-            from sentence_transformers import SentenceTransformer
-            self._model = SentenceTransformer(self.model_path)
+            with self._lock:
+                if self._model is None:
+                    logger.info(f"Loading embedding model from '{self.model_path}'...")
+                    from sentence_transformers import SentenceTransformer
+                    self._model = SentenceTransformer(self.model_path)
         return self._model
 
     @functools.lru_cache(maxsize=512)
